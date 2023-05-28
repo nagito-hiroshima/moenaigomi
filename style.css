@@ -14,7 +14,22 @@
     position: flex;
 }
 
-
+.copyright{
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px; /* 要素の横幅を指定 */
+  height: 20px;
+  text-align: center;
+  font-size: 15px;
+  color: black;
+  text-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  text-decoration: none;
+  font-weight: 550;
+  border-radius: 20px;
+  background-color: white
+}
 
 img{
 height: 100px;

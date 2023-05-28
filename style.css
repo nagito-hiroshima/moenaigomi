@@ -16,10 +16,10 @@
 
 
 
-img{height: 100px;
+img{
+height: 100px;
 width: 100px;}
 
-@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700');
 
 * {
   margin: 0;
@@ -32,10 +32,6 @@ html, body {
   height: 100%;
 }
 
-body {
-  background: #202020;
-  font-family: 'Source Sans Pro', sans-serif;
-}
 
 .buttons-container {
   position: absolute;

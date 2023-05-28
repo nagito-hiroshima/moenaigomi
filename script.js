@@ -2,21 +2,7 @@ var buttonContainer = document.getElementById('button-container');
 var windowWidth = window.innerWidth;
 var windowHeight = window.innerHeight;
 
-var buttonContents = [
-  { text: 'ボタン1', imageSrc: 'path/to/image1.jpg', backgroundColor: '#007bff', url: 'https://example.com/page1' },
-  { text: 'ボタン2', imageSrc: 'path/to/image2.jpg', backgroundColor: '#dc3545', url: 'https://example.com/page2' },
-  { text: 'ボタン3', imageSrc: 'path/to/image3.jpg', backgroundColor: '#28a745', url: 'https://example.com/page3' },  { text: 'ボタン1', imageSrc: 'path/to/image1.jpg', backgroundColor: '#007bff', url: 'https://example.com/page1' },
-  { text: 'ボタン2', imageSrc: 'path/to/image2.jpg', backgroundColor: '#dc3545', url: 'https://example.com/page2' },
-  { text: 'ボタン3', imageSrc: 'path/to/image3.jpg', backgroundColor: '#28a745', url: 'https://example.com/page3' },
-  { text: 'ボタン1', imageSrc: 'path/to/image1.jpg', backgroundColor: '#007bff', url: 'https://example.com/page1' },
-  { text: 'ボタン2', imageSrc: 'path/to/image2.jpg', backgroundColor: '#dc3545', url: 'https://example.com/page2' },
-  { text: 'ボタン3', imageSrc: 'path/to/image3.jpg', backgroundColor: '#28a745', url: 'https://example.com/page3' },
-  { text: 'ボタン1', imageSrc: 'path/to/image1.jpg', backgroundColor: '#007bff', url: 'https://example.com/page1' },
-  { text: 'ボタン2', imageSrc: 'path/to/image2.jpg', backgroundColor: '#dc3545', url: 'https://example.com/page2' },
-  { text: 'ボタン3', imageSrc: 'path/to/image3.jpg', backgroundColor: '#28a745', url: 'https://example.com/page3' },
-
-  // 他のボタンの情報を追加
-];
+var buttonContents = getSpreadSheetData();
 
 function createFloatingButton(content) {
   var button = document.createElement('button');
@@ -156,15 +142,58 @@ function checkCollision(element1, element2) {
   );
 }
 
-// ページの読み込みが完了したらボタンを作成
-document.addEventListener('DOMContentLoaded', function() {
-  for (var i = 0; i < buttonContents.length; i++) {
-    createFloatingButton(buttonContents[i]);
-  }
 
-  animateButtons();
-});
 
+
+
+
+
+function csschange(stylesheetId) {
+  //hrefの値を変更する
+  document.getElementById("stylesheet").href = "./"+stylesheetId+".css";
+}
+  
+
+//スプレッドシートからデータを取得する
+function getSpreadSheetData() {
+    const url = "https://script.google.com/macros/s/AKfycbwJcyebutI6_tNCmV75O5FWMEqloMrPov62ShsT35D6CGOvacWuuwcAAW40pkxUGvBT/exec";
+    fetch(url)
+        .then((res) => {
+        return res.json();
+        })
+        .then((data) => {
+        console.log(data);
+        //かえってきたオブジェクトのキーを変更
+        const keys = Object.keys(data[0]);
+        const newKeys = keys.map((key) => {
+            return key.replace("作品名", "text").replace("画像", "imageSrc").replace("背景色", "backgroundColor").replace("掲載先リンク", "url");
+        }
+        );
+        //オブジェクトのキーを変更
+        const newData = data.map((d) => {
+            const newObject = {};
+            keys.forEach((key, index) => {
+            newObject[newKeys[index]] = d[key];
+            });
+            return newObject;
+        }
+        );
+        console.log(newData);
+
+        for (var i = 0; i < newData.length; i++) {
+            createFloatingButton(newData[i]);
+          }
+        
+          animateButtons();
+    
+      })
+      //エラーが発生した場合
+        .catch((error) => {
+        console.error("システムメンテナンス中");
+        })
+      ;
+       
+}
 
 const lis = document.querySelectorAll("li");
 const a = document.querySelectorAll("li a");
@@ -179,11 +208,3 @@ for (let i = 0; i < lis.length; i++) {
     a[i].classList.add("active-text");
   });
 }
-
-
-
-function csschange(stylesheetId) {
-  //hrefの値を変更する
-  document.getElementById("stylesheet").href = "./"+stylesheetId+".css";
-}
-  

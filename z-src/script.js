@@ -150,7 +150,7 @@ function checkCollision(element1, element2) {
 
 function csschange(stylesheetId) {
   //hrefの値を変更する
-  document.getElementById("stylesheet").href = "./"+stylesheetId+".css";
+  document.getElementById("stylesheet").href = "/z-src/"+stylesheetId+".css";
 }
   
 

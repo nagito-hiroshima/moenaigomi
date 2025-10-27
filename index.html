@@ -51,7 +51,11 @@
 
     <div id="button-container"></div>
 
-    <a class="copyright" href="" target="_blank">©︎2024 moenaigomi.com</a>
+    <a class="copyright" href="" target="_blank" id="copyright"></a>
+    <script>
+        const year = new Date().getFullYear();
+        document.getElementById("copyright").innerHTML = "&#169; " + year + "moenaigomi.com";
+    </script>
 
     <script src="./z-src/script.js"></script>
 </body>

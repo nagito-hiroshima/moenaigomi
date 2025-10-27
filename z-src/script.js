@@ -16,7 +16,16 @@ function createFloatingButton(content) {
   text.textContent = content.text;
   button.appendChild(text);
 
-  button.style.backgroundColor = content.backgroundColor; // 背景色を指定
+  // 背景色を指定（スプレッドシートの値をそのまま使う）
+  if (content.backgroundColor) {
+    button.style.backgroundColor = content.backgroundColor;
+  }
+
+  // 文字色を背景色に合わせて自動設定
+  var bgForCalc = content.backgroundColor || window.getComputedStyle(button).backgroundColor || window.getComputedStyle(document.body).backgroundColor;
+  var contrast = getContrastColor(bgForCalc);
+  button.style.color = contrast;
+  text.style.color = contrast;
 
   var buttonWidth = button.offsetWidth;
   var buttonHeight = button.offsetHeight;
@@ -25,11 +34,23 @@ function createFloatingButton(content) {
   var maxAttempts = 100; // 最大試行回数
   var attempt = 0;
 
+  //サイズ調整(倍率)
+  var sizeMultiplier = 1.0;
+  if (content.size) {
+    var sizeValue = parseFloat(content.size);
+    if (!isNaN(sizeValue) && sizeValue > 0) {
+      sizeMultiplier = sizeValue;
+    }
+  }
+  button.style.transform = 'scale(' + sizeMultiplier + ')';
+  buttonWidth = buttonWidth * sizeMultiplier;
+  buttonHeight = buttonHeight * sizeMultiplier;
+
   while (overlapping && attempt < maxAttempts) {
     overlapping = false;
 
-    var randomX = Math.floor(Math.random() * (windowWidth-200 - buttonWidth));
-    var randomY = Math.floor(Math.random() * (windowHeight-200 - buttonHeight));
+    var randomX = Math.floor(Math.random() * (windowWidth-400 - buttonWidth));
+    var randomY = Math.floor(Math.random() * (windowHeight-400 - buttonHeight));
 
     // 他のボタンとの重なりをチェック
     var buttons = document.getElementsByClassName('floating-button');
@@ -113,7 +134,6 @@ if (newX1 <= 0 || newX1 >= windowWidth - button1.offsetWidth) {
           newX1 = currentX1 + speedX1;
           newY1 = currentY1 + speedY1;
 
-          
 
           break; // 衝突が発生したらループを終了する
         }
@@ -143,16 +163,10 @@ function checkCollision(element1, element2) {
 }
 
 
-
-
-
-
-
 function csschange(stylesheetId) {
   //hrefの値を変更する
   document.getElementById("stylesheet").href = "/z-src/"+stylesheetId+".css";
 }
-  
 
 //スプレッドシートからデータを取得する
 function getSpreadSheetData() {
@@ -166,7 +180,7 @@ function getSpreadSheetData() {
         //かえってきたオブジェクトのキーを変更
         const keys = Object.keys(data[0]);
         const newKeys = keys.map((key) => {
-            return key.replace("作品名", "text").replace("画像", "imageSrc").replace("背景色", "backgroundColor").replace("掲載先リンク", "url");
+            return key.replace("作品名", "text").replace("画像", "imageSrc").replace("背景色", "backgroundColor").replace("掲載先リンク", "url").replace("サイズ", "size");
         }
         );
         //オブジェクトのキーを変更
@@ -207,4 +221,91 @@ for (let i = 0; i < lis.length; i++) {
     this.classList.add("active");
     a[i].classList.add("active-text");
   });
+}
+
+(function createFloatingTextToggle(){
+  var showText = false;
+
+  function applyStateToButton(btn){
+    if(!btn || !btn.classList) return;
+    if (showText) btn.classList.add('show-text');
+    else btn.classList.remove('show-text');
+  }
+
+  // トグルボタンを作成
+  var toggle = document.createElement('button');
+  toggle.id = 'toggle-text-btn';
+  toggle.title = 'ラベル表示切替';
+  toggle.textContent = 'Aa';
+  Object.assign(toggle.style, {
+    position: 'fixed',
+    right: '16px',
+    top: '10px', /* floating-button の上に表示 */
+    width: '40px',
+    height: '40px',
+    borderRadius: '10px',
+    background: 'rgba(81, 81, 81, 0.39)',
+    color: '#fff',
+    border: '1px solid rgba(255,255,255,0.08)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    zIndex: 10000,
+    backdropFilter: 'blur(6px)'
+  });
+
+  toggle.addEventListener('click', function(){
+    showText = !showText;
+    var buttons = document.getElementsByClassName('floating-button');
+    for (var i = 0; i < buttons.length; i++) applyStateToButton(buttons[i]);
+    // 視覚フィードバック
+    toggle.style.background = showText ? 'linear-gradient(135deg,#7c5cff,#4b3bdb)' : 'rgba(255,255,255,0.06)';
+  });
+
+  document.body.appendChild(toggle);
+
+  // 新しく追加されるボタンにも現在の状態を適用
+  var container = document.getElementById('button-container') || document.body;
+  var mo = new MutationObserver(function(muts){
+    muts.forEach(function(mut){
+      mut.addedNodes.forEach(function(node){
+        if (node && node.classList && node.classList.contains('floating-button')) {
+          applyStateToButton(node);
+        }
+      });
+    });
+  });
+  mo.observe(container, { childList: true, subtree: false });
+
+})();
+
+/**
+ * 色文字列（#hex, rgb(), rgba(), named）をパースして [r,g,b] を返す。
+ * DOM を一時的に使ってブラウザの色解釈を利用する（信頼性高め）。
+ */
+function parseToRGB(colorStr) {
+  if (!colorStr) return '#000000';
+  var d = document.createElement('div');
+  d.style.color = colorStr;
+  d.style.display = 'none';
+  document.body.appendChild(d);
+  var cs = getComputedStyle(d).color;
+  document.body.removeChild(d);
+  var m = cs.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (m) return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
+  return '#000000';
+}
+
+/**
+ * 相対輝度を計算し、背景色に応じて文字色を '#000000' または '#ffffff' を返す。
+ */
+function getContrastColor(colorStr) {
+  var rgb = parseToRGB(colorStr);
+  if (!rgb) return '#ffffff';
+  // sRGB -> linear
+  var srgb = rgb.map(function(v){ v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  var lum = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  // 輝度が高ければ黒、低ければ白
+  return lum > 0.5 ? '#000000' : '#ffffff';
 }

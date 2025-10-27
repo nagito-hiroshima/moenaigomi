@@ -98,9 +98,9 @@ function animateButtons() {
     var currentX1 = parseInt(button1.style.left) || 0;
     var currentY1 = parseInt(button1.style.top) || 0;
 
-    var speedX1 = button1.speedX || Math.floor((Math.random()*1.5)+1.5); // 速度のランダムな初期値
-    var speedY1 = button1.speedY || Math.floor((Math.random()*1.5)+1.5) ; // 速度のランダムな初期値
-    
+    var speedX1 = button1.speedX || Math.floor((Math.random()*1.5)+3.0); // 速度のランダムな初期値
+    var speedY1 = button1.speedY || Math.floor((Math.random()*1.5)+3.0) ; // 速度のランダムな初期値
+
 
     var newX1 = currentX1 + speedX1;
     var newY1 = currentY1 + speedY1;

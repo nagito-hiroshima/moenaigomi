@@ -2,6 +2,10 @@ var buttonContainer = document.getElementById('button-container');
 var windowWidth = window.innerWidth;
 var windowHeight = window.innerHeight;
 
+// 追加: アニメーション制御用の変数
+var animationFrameId = null;
+var animationPaused = false;
+
 var buttonContents = getSpreadSheetData();
 
 function createFloatingButton(content) {
@@ -49,8 +53,8 @@ function createFloatingButton(content) {
   while (overlapping && attempt < maxAttempts) {
     overlapping = false;
 
-    var randomX = Math.floor(Math.random() * (windowWidth-400 - buttonWidth));
-    var randomY = Math.floor(Math.random() * (windowHeight-400 - buttonHeight));
+    var randomX = Math.floor(Math.random() * (windowWidth - 400 - buttonWidth));
+    var randomY = Math.floor(Math.random() * (windowHeight - 400 - buttonHeight));
 
     // 他のボタンとの重なりをチェック
     var buttons = document.getElementsByClassName('floating-button');
@@ -59,9 +63,9 @@ function createFloatingButton(content) {
       var otherButtonRect = otherButton.getBoundingClientRect();
 
       if (
-        randomX + buttonWidth+200 > otherButtonRect.left &&
+        randomX + buttonWidth + 200 > otherButtonRect.left &&
         randomX < otherButtonRect.right &&
-        randomY + buttonHeight+200 > otherButtonRect.top &&
+        randomY + buttonHeight + 200 > otherButtonRect.top &&
         randomY < otherButtonRect.bottom
       ) {
         overlapping = true;
@@ -98,30 +102,27 @@ function animateButtons() {
     var currentX1 = parseInt(button1.style.left) || 0;
     var currentY1 = parseInt(button1.style.top) || 0;
 
-    var speedX1 = button1.speedX || Math.floor((Math.random()*1.5)+1); // 速度のランダムな初期値
-    var speedY1 = button1.speedY || Math.floor((Math.random()*1.5)+1) ; // 速度のランダムな初期値
+    var speedX1 = button1.speedX || Math.floor((Math.random() * 1.5) + 1); // 速度のランダムな初期値
+    var speedY1 = button1.speedY || Math.floor((Math.random() * 1.5) + 1); // 速度のランダムな初期値
 
 
     var newX1 = currentX1 + speedX1;
     var newY1 = currentY1 + speedY1;
 
 
-// 壁に当たったら速度を反転させる
-if (newX1 <= 0 || newX1 >= windowWidth - button1.offsetWidth) {
-    speedX1 = -speedX1;    newX1 = Math.min(newX1, windowWidth - button1.offsetWidth); // X 座標が画面幅を超えないようにする
-  }
-  if (newY1 <= 0 || newY1 >= windowHeight - button1.offsetHeight) {
-    speedY1 = -speedY1;
-    newY1 = Math.min(newY1, windowHeight - button1.offsetHeight); // Y 座標が画面高さを超えないようにする
-  }
-
-   
+    // 壁に当たったら速度を反転させる
+    if (newX1 <= 0 || newX1 >= windowWidth - button1.offsetWidth) {
+      speedX1 = -speedX1; newX1 = Math.min(newX1, windowWidth - button1.offsetWidth);
+    }
+    if (newY1 <= 0 || newY1 >= windowHeight - button1.offsetHeight) {
+      speedY1 = -speedY1;
+      newY1 = Math.min(newY1, windowHeight - button1.offsetHeight);
+    }
 
     for (var j = 0; j < buttons.length; j++) {
       if (i !== j) {
         var button2 = buttons[j];
         if (checkCollision(button1, button2)) {
-          // ボタン同士の位置と速度を交換する
           var tempX = speedX1;
           var tempY = speedY1;
           speedX1 = button2.speedX;
@@ -129,13 +130,10 @@ if (newX1 <= 0 || newX1 >= windowWidth - button1.offsetWidth) {
           button2.speedX = tempX;
           button2.speedY = tempY;
 
-
-          // 衝突後にボタン1の位置を更新する
           newX1 = currentX1 + speedX1;
           newY1 = currentY1 + speedY1;
 
-
-          break; // 衝突が発生したらループを終了する
+          break;
         }
       }
     }
@@ -147,7 +145,37 @@ if (newX1 <= 0 || newX1 >= windowWidth - button1.offsetWidth) {
     button1.speedY = speedY1;
   }
 
-  requestAnimationFrame(animateButtons);
+  // フレームIDを保持してキャンセル可能にする
+  animationFrameId = requestAnimationFrame(animateButtons);
+}
+
+// 追加: アニメーション開始/停止制御関数（グローバル）
+function startAnimation() {
+  if (animationFrameId === null) {
+    animationPaused = false;
+    // 最初のフレームを開始
+    animateButtons();
+    // ポーズボタンが存在すれば見た目を再生中に更新
+    var pb = document.getElementById('pause-btn');
+    if (pb) {
+      pb.textContent = '⏸';
+      // 変更: 再生中は薄色（色を逆転）
+      pb.style.background = 'rgba(81, 81, 81, 0.39)';
+    }
+  }
+}
+function stopAnimation() {
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+    animationPaused = true;
+    var pb = document.getElementById('pause-btn');
+    if (pb) {
+      pb.textContent = '▶';
+      // 変更: 停止時はグラデーション（色を逆転）
+      pb.style.background = 'linear-gradient(135deg,#7c5cff,#4b3bdb)';
+    }
+  }
 }
 
 function checkCollision(element1, element2) {
@@ -165,55 +193,55 @@ function checkCollision(element1, element2) {
 
 function csschange(stylesheetId) {
   //hrefの値を変更する
-  document.getElementById("stylesheet").href = "/z-src/"+stylesheetId+".css";
+  document.getElementById("stylesheet").href = "/z-src/" + stylesheetId + ".css";
 }
 
-//スプレッドシートからデータを取得する
+// スプレッドシートからデータを取得する
 function getSpreadSheetData() {
-    const url = "https://script.google.com/macros/s/AKfycbwJcyebutI6_tNCmV75O5FWMEqloMrPov62ShsT35D6CGOvacWuuwcAAW40pkxUGvBT/exec";
-    fetch(url)
-        .then((res) => {
-        return res.json();
-        })
-        .then((data) => {
-        console.log(data);
-        //かえってきたオブジェクトのキーを変更
-        const keys = Object.keys(data[0]);
-        const newKeys = keys.map((key) => {
-            return key.replace("作品名", "text").replace("画像", "imageSrc").replace("背景色", "backgroundColor").replace("掲載先リンク", "url").replace("サイズ", "size");
-        }
-        );
-        //オブジェクトのキーを変更
-        const newData = data.map((d) => {
-            const newObject = {};
-            keys.forEach((key, index) => {
-            newObject[newKeys[index]] = d[key];
-            });
-            return newObject;
-        }
-        );
-        console.log(newData);
+  const url = "https://script.google.com/macros/s/AKfycbwJcyebutI6_tNCmV75O5FWMEqloMrPov62ShsT35D6CGOvacWuuwcAAW40pkxUGvBT/exec";
+  fetch(url)
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+      //かえってきたオブジェクトのキーを変更
+      const keys = Object.keys(data[0]);
+      const newKeys = keys.map((key) => {
+        return key.replace("作品名", "text").replace("画像", "imageSrc").replace("背景色", "backgroundColor").replace("掲載先リンク", "url").replace("サイズ", "size");
+      }
+      );
+      //オブジェクトのキーを変更
+      const newData = data.map((d) => {
+        const newObject = {};
+        keys.forEach((key, index) => {
+          newObject[newKeys[index]] = d[key];
+        });
+        return newObject;
+      }
+      );
+      console.log(newData);
 
-        for (var i = 0; i < newData.length; i++) {
-            createFloatingButton(newData[i]);
-          }
-        
-          animateButtons();
-    
-      })
-      //エラーが発生した場合
-        .catch((error) => {
-        console.error("システムメンテナンス中");
-        })
-      ;
-       
+      for (var i = 0; i < newData.length; i++) {
+        createFloatingButton(newData[i]);
+      }
+
+      startAnimation();
+
+    })
+    //エラーが発生した場合
+    .catch((error) => {
+      console.error("システムメンテナンス中");
+    })
+    ;
+
 }
 
 const lis = document.querySelectorAll("li");
 const a = document.querySelectorAll("li a");
 
 for (let i = 0; i < lis.length; i++) {
-  lis[i].addEventListener("click", function() {
+  lis[i].addEventListener("click", function () {
     for (let i = 0; i < lis.length; i++) {
       lis[i].classList.remove("active");
       a[i].classList.remove("active-text");
@@ -223,11 +251,11 @@ for (let i = 0; i < lis.length; i++) {
   });
 }
 
-(function createFloatingTextToggle(){
+(function createFloatingTextToggle() {
   var showText = false;
 
-  function applyStateToButton(btn){
-    if(!btn || !btn.classList) return;
+  function applyStateToButton(btn) {
+    if (!btn || !btn.classList) return;
     if (showText) btn.classList.add('show-text');
     else btn.classList.remove('show-text');
   }
@@ -235,12 +263,12 @@ for (let i = 0; i < lis.length; i++) {
   // トグルボタンを作成
   var toggle = document.createElement('button');
   toggle.id = 'toggle-text-btn';
-  toggle.title = 'ラベル表示切替';
+  toggle.title = 'ラベル表示切替 (C)';
   toggle.textContent = 'Aa';
   Object.assign(toggle.style, {
     position: 'fixed',
     right: '16px',
-    top: '10px', /* floating-button の上に表示 */
+    top: '10px',
     width: '40px',
     height: '40px',
     borderRadius: '10px',
@@ -255,21 +283,71 @@ for (let i = 0; i < lis.length; i++) {
     backdropFilter: 'blur(6px)'
   });
 
-  toggle.addEventListener('click', function(){
+  toggle.addEventListener('click', function () {
     showText = !showText;
     var buttons = document.getElementsByClassName('floating-button');
     for (var i = 0; i < buttons.length; i++) applyStateToButton(buttons[i]);
-    // 視覚フィードバック
-    toggle.style.background = showText ? 'linear-gradient(135deg,#7c5cff,#4b3bdb)' : 'rgba(255,255,255,0.06)';
+    toggle.style.background = showText ? 'linear-gradient(135deg,#7c5cff,#4b3bdb)' : 'rgba(81, 81, 81, 0.39)';
   });
 
   document.body.appendChild(toggle);
 
+  // ポーズ／再開ボタン（トグルの下に表示） — 初期は「再生中」見た目にする
+  var pauseBtn = document.createElement('button');
+  pauseBtn.id = 'pause-btn';
+  pauseBtn.title = 'アニメーション一時停止 / 再開（スペースキー）';
+  pauseBtn.textContent = '⏸';
+  Object.assign(pauseBtn.style, {
+    position: 'fixed',
+    right: '16px',
+    top: '58px',
+    width: '40px',
+    height: '40px',
+    borderRadius: '10px',
+    background: 'rgba(81, 81, 81, 0.39)', // 変更: 初期（再生中）は薄色に
+    color: '#fff',
+    border: '1px solid rgba(255,255,255,0.08)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    zIndex: 10000,
+    backdropFilter: 'blur(6px)'
+  });
+
+  pauseBtn.addEventListener('click', function () {
+    if (animationFrameId === null) {
+      // 再開
+      startAnimation();
+    } else {
+      // 一時停止
+      stopAnimation();
+    }
+  });
+
+  //スペースキーでもトグル可能に
+  document.addEventListener('keydown', function (e) {
+    if (e.code === 'Space') {
+      if (animationFrameId === null) {
+        // 再開
+        startAnimation();
+      } else {
+        // 一時停止
+        stopAnimation();
+      }
+    }else if(e.code==="KeyC"){
+      // Cキーでテキスト表示切替
+      toggle.click();
+    } 
+  });
+
+  document.body.appendChild(pauseBtn);
+
   // 新しく追加されるボタンにも現在の状態を適用
   var container = document.getElementById('button-container') || document.body;
-  var mo = new MutationObserver(function(muts){
-    muts.forEach(function(mut){
-      mut.addedNodes.forEach(function(node){
+  var mo = new MutationObserver(function (muts) {
+    muts.forEach(function (mut) {
+      mut.addedNodes.forEach(function (node) {
         if (node && node.classList && node.classList.contains('floating-button')) {
           applyStateToButton(node);
         }
@@ -304,7 +382,7 @@ function getContrastColor(colorStr) {
   var rgb = parseToRGB(colorStr);
   if (!rgb) return '#ffffff';
   // sRGB -> linear
-  var srgb = rgb.map(function(v){ v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  var srgb = rgb.map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
   var lum = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
   // 輝度が高ければ黒、低ければ白
   return lum > 0.5 ? '#000000' : '#ffffff';

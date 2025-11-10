@@ -32,7 +32,6 @@
     <!-- スタイルシート1 -->
     <link id="stylesheet" rel="stylesheet" href="./z-src/0.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
 </head>
 
 <body>
@@ -55,7 +54,17 @@
         document.getElementById("copyright").innerHTML = "&#169;" + year + " moenaigomi.com";
     </script>
 
+    <!-- 説明ウインドウ -->
+    <div id="explain-popup" class="explain-popup" role="dialog" aria-live="polite" aria-hidden="true">
+        <button class="close-btn" aria-label="閉じる" id="explain-close">&times;</button>
+        <p>このサイトは今までに作成したプログラムの詰め合わせです。</p>
+        <p>スペースキーで動きを停止/再開できます。</p>
+        <p>Cキーでコンテンツタイトルを表示できます。</p>
+    </div>
+
+
     <script src="./z-src/script.js"></script>
+    <script src="./z-src/popup.js"></script>
 </body>
 
 </html>

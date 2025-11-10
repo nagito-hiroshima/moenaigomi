@@ -218,7 +218,8 @@ function getSpreadSheetData() {
       console.table(data);
 
       if (data[0]["休止"]) {
-        alert("現在、システムメンテナンス中のため、新規の作品追加を休止しております。復旧までしばらくお待ちください。");
+        //error.htmlへリダイレクト
+        window.location.href = "error.html";
         return;
 
       }

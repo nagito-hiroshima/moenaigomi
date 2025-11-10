@@ -33,16 +33,217 @@
     <link id="stylesheet" rel="stylesheet" href="./z-src/0.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
+    <!-- ゲームっぽいローディング画面のスタイル -->
+    <style>
+        #game-loading {
+            z-index: 10001;
+        }
+
+        /* roguelike-style 下部ログ */
+        .rogue-log {
+            position: fixed;
+            left: 50%;
+            bottom: 12px;
+            transform: translateX(-50%);
+            width: min(94%, 980px);
+            max-height: 180px;
+            background: rgba(2, 6, 12, 0.85);
+            color: #cfeefc;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            line-height: 1.35;
+            overflow-y: auto;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            z-index: 2147483647;
+            /* 可能な限り最前面 */
+            white-space: pre-wrap;
+        }
+
+        .rogue-log .line {
+            opacity: 0.95;
+            margin-bottom: 4px;
+        }
+
+        .rogue-log .time {
+            color: #7fd7ff;
+            margin-right: 8px;
+            opacity: 0.9;
+            font-weight: 700;
+        }
+
+        .rogue-log.hidden {
+            display: none;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #071124;
+            color: #e6f7ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity .5s ease, visibility .5s;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: min(880px, 92%);
+            max-width: 960px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 28px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .scanlines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 6px;
+            mix-blend-mode: overlay;
+        }
+
+        .hud {
+            font-family: monospace;
+            color: #9ee9ff;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .progress {
+            background: rgba(0, 0, 0, 0.18);
+            padding: 10px;
+            border-radius: 12px;
+            margin: 8px 0;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #2bffc6, #00aaff);
+            border-radius: 10px 0 0 10px;
+            box-shadow: 0 4px 18px rgba(0, 170, 255, 0.18) inset;
+            transition: width .12s linear;
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0, rgba(255, 255, 255, 0) 60%);
+            transform: translateX(-100%);
+            animation: sheen 2s linear infinite;
+        }
+
+        @keyframes sheen {
+            to {
+                transform: translateX(100%);
+            }
+        }
+
+        .player {
+            width: 18px;
+            height: 18px;
+            background: #ffdd57;
+            border-radius: 4px;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 6px 18px rgba(255, 221, 87, 0.35);
+            animation: bob 0.6s ease-in-out infinite;
+            z-index: 5;
+        }
+
+        @keyframes bob {
+            50% {
+                transform: translate(-50%, -58%);
+            }
+        }
+
+        .loading-text {
+            font-family: monospace;
+            margin-top: 10px;
+            letter-spacing: 2px;
+            color: #cfeefc;
+        }
+
+        .press-key {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #9fbfd6;
+        }
+
+        #particle-canvas {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .loader * {
+            position: relative;
+            z-index: 2;
+        }
+    </style>
 </head>
 
 <body>
+    <!-- ゲームっぽいローディング画面（ページ読み込み時に表示） -->
+    <div id="game-loading" class="loading-overlay" role="dialog" aria-live="polite" aria-hidden="false">
+        <div class="loader" role="document">
+            <div class="scanlines" aria-hidden="true"></div>
+            <div class="hud">燃えないゴミ箱 — 起動中</div>
+
+            <div class="progress" aria-hidden="true">
+                <div class="progress-bar" id="progress-bar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="progress-fill" id="progress-fill"></div>
+                    <div class="player" id="player" aria-hidden="true"></div>
+                </div>
+            </div>
+
+            <div class="loading-text" id="loading-text">LOADING 0%</div>
+
+            <canvas id="particle-canvas" aria-hidden="true"></canvas>
+        </div>
+    </div>
+
+    <!-- roguelike-style 下部ログ表示 -->
+    <div id="rogue-log" class="rogue-log" aria-live="polite" aria-atomic="false"></div>
+
     <div class="buttons-container">
         <ul>
             <li class="active" onclick="csschange('0')"><a class="active-text"><i class="fas fa-burn"></i></a>
             </li>
-            <li onclick="csschange('1')"><a ><i class="fas fa-candy-cane"></i></a></li>
-            <li onclick="csschange('2')"><a ><i class="fab fa-cc-visa"></i></a></li>
-            <li onclick="csschange('3')"><a ><i class="	fab fa-connectdevelop"></i></a></li>
+            <li onclick="csschange('1')"><a><i class="fas fa-candy-cane"></i></a></li>
+            <li onclick="csschange('2')"><a><i class="fab fa-cc-visa"></i></a></li>
+            <li onclick="csschange('3')"><a><i class="	fab fa-connectdevelop"></i></a></li>
         </ul>
     </div>
 
@@ -55,7 +256,29 @@
         document.getElementById("copyright").innerHTML = "&#169;" + year + " moenaigomi.com";
     </script>
 
+    <!-- 説明ウインドウ -->
+    <div id="explain-popup" class="explain-popup" role="dialog" aria-live="polite" aria-hidden="true">
+        <button class="close-btn" aria-label="閉じる" id="explain-close">&times;</button>
+        <p>このサイトは今までに作成したプログラムの詰め合わせです。</p>
+        <p>スペースキーで動きを停止/再開できます。</p>
+        <p>Cキーでコンテンツタイトルを表示できます。</p>
+    </div>
+
+
+    <script src="./z-src/loading.js"></script>
     <script src="./z-src/script.js"></script>
+    <script src="./z-src/popup.js"></script>
 </body>
 
 </html>
+
+
+<!--
+進捗を直接設定: window.__moenaigomi_loading.set(40)
+進捗を増やす: window.__moenaigomi_loading.inc(5)
+完了させる: window.__moenaigomi_loading.finish()
+表示/非表示: window.__moenaigomi_loading.show() / window.__moenaigomi_loading.hide()
+ログ追加: window.__moenaigomi_loading.log('メッセージ')
+ログクリア: window.__moenaigomi_loading.clearLog()
+
+-->

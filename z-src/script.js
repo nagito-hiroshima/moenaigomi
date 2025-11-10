@@ -195,22 +195,44 @@ function csschange(stylesheetId) {
   //hrefの値を変更する
   document.getElementById("stylesheet").href = "/z-src/" + stylesheetId + ".css";
 }
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+      // --- ここから非同期で少しずつログ／ボタン作成する処理 ---
+      const WAIT_MS = 80; // 各ループ間の遅延（ms）。必要なら調整してください。
+
+
 
 // スプレッドシートからデータを取得する
 function getSpreadSheetData() {
+  window.__moenaigomi_loading.inc(5)
+  window.__moenaigomi_loading.log('作品データベースサーバーに接続しています...');
+
   const url = "https://script.google.com/macros/s/AKfycbwJcyebutI6_tNCmV75O5FWMEqloMrPov62ShsT35D6CGOvacWuuwcAAW40pkxUGvBT/exec";
   fetch(url)
     .then((res) => {
       return res.json();
     })
     .then((data) => {
-      console.log(data);
+      console.log("取得したデータ:");
+      console.table(data);
+
+      if (data[0]["休止"]) {
+        alert("現在、システムメンテナンス中のため、新規の作品追加を休止しております。復旧までしばらくお待ちください。");
+        return;
+
+      }
+
+      window.__moenaigomi_loading.inc(20)
+      window.__moenaigomi_loading.log('作品データベースサーバーからデータを取得しました。');
+
+
       //かえってきたオブジェクトのキーを変更
       const keys = Object.keys(data[0]);
+      window.__moenaigomi_loading.log('作品データを解析しています...');
       const newKeys = keys.map((key) => {
         return key.replace("作品名", "text").replace("画像", "imageSrc").replace("背景色", "backgroundColor").replace("掲載先リンク", "url").replace("サイズ", "size");
-      }
-      );
+      });
       //オブジェクトのキーを変更
       const newData = data.map((d) => {
         const newObject = {};
@@ -220,18 +242,31 @@ function getSpreadSheetData() {
         return newObject;
       }
       );
-      console.log(newData);
+      console.log("キー変更後のデータ:");
+      console.table(newData);
 
-      for (var i = 0; i < newData.length; i++) {
-        createFloatingButton(newData[i]);
-      }
 
-      startAnimation();
 
+      (async function createSequential() {
+        for (let i = 0; i < newData.length; i++) {
+          window.__moenaigomi_loading.inc(newData.length > 0 ? 65 / newData.length : 0);
+          window.__moenaigomi_loading.log(`[${i + 1}/${newData.length}]  ${newData[i]["text"]}のボタンを作成しています...`);
+          createFloatingButton(newData[i]);
+          // 少し待ってUIのブロッキングを抑える
+          await wait(WAIT_MS);
+        }
+
+        window.__moenaigomi_loading.set(100)
+        window.__moenaigomi_loading.log('すべての作品ボタンを作成しました。アニメーションを開始します。');
+
+        startAnimation();
+      })();
+      // --- ここまで ---
     })
     //エラーが発生した場合
     .catch((error) => {
       console.error("システムメンテナンス中");
+      console.error(error);
     })
     ;
 
@@ -335,10 +370,10 @@ for (let i = 0; i < lis.length; i++) {
         // 一時停止
         stopAnimation();
       }
-    }else if(e.code==="KeyC"){
+    } else if (e.code === "KeyC") {
       // Cキーでテキスト表示切替
       toggle.click();
-    } 
+    }
   });
 
   document.body.appendChild(pauseBtn);
@@ -387,3 +422,6 @@ function getContrastColor(colorStr) {
   // 輝度が高ければ黒、低ければ白
   return lum > 0.5 ? '#000000' : '#ffffff';
 }
+
+window.__moenaigomi_loading.inc(5)
+window.__moenaigomi_loading.log('ページの読み込みが完了しました。');

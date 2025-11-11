@@ -1,3 +1,6 @@
+window.__moenaigomi_loading.inc(5)
+window.__moenaigomi_loading.log('ページの読み込みが完了しました。');
+
 var buttonContainer = document.getElementById('button-container');
 var windowWidth = window.innerWidth;
 var windowHeight = window.innerHeight;
@@ -200,7 +203,6 @@ function wait(ms) {
 }
       // --- ここから非同期で少しずつログ／ボタン作成する処理 ---
       const WAIT_MS = 80; // 各ループ間の遅延（ms）。必要なら調整してください。
-
 
 
 // スプレッドシートからデータを取得する
@@ -423,6 +425,3 @@ function getContrastColor(colorStr) {
   // 輝度が高ければ黒、低ければ白
   return lum > 0.5 ? '#000000' : '#ffffff';
 }
-
-window.__moenaigomi_loading.inc(5)
-window.__moenaigomi_loading.log('ページの読み込みが完了しました。');

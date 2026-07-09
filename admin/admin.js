@@ -25,6 +25,46 @@ async function api(path, options = {}) {
   return response.json();
 }
 
+async function exportCsv() {
+  status.textContent = 'CSVを作成中...';
+  const response = await fetch('/api/items/csv', { headers: { authorization: authHeader() } });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || `HTTP ${response.status}`);
+  }
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'moenaigomi-items.csv';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  status.textContent = 'CSVをエクスポートしました。';
+}
+
+async function importCsv(file) {
+  if (!file) return;
+  if (!confirm('CSVの内容で現在の登録データを置き換えます。よろしいですか？')) return;
+
+  status.textContent = 'CSVをインポート中...';
+  const response = await fetch('/api/items/csv', {
+    method: 'POST',
+    headers: {
+      authorization: authHeader(),
+      'content-type': file.type || 'text/csv; charset=utf-8',
+    },
+    body: await file.text(),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body.errors?.join('\n') || body.error || `HTTP ${response.status}`);
+  }
+  status.textContent = `${body.imported}件をインポートしました。`;
+  await loadItems();
+}
+
 function showApp() {
   authPanel.classList.add('hidden');
   editorPanel.classList.remove('hidden');
@@ -131,6 +171,8 @@ $('items').addEventListener('click', async (event) => {
 });
 
 $('reset-button').addEventListener('click', resetForm);
+$('export-button').addEventListener('click', () => exportCsv().catch((error) => alert(`エクスポートできませんでした: ${error.message}`)));
+$('import-file').addEventListener('change', (event) => importCsv(event.target.files[0]).catch((error) => alert(`インポートできませんでした: ${error.message}`)).finally(() => { event.target.value = ''; }));
 $('reload-button').addEventListener('click', loadItems);
 
 if (state.password) {

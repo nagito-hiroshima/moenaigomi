@@ -44,7 +44,11 @@
     <section class="panel hidden" id="list-panel">
       <div class="panel-heading">
         <h2>登録済み作品</h2>
-        <button type="button" id="reload-button" class="secondary">再読み込み</button>
+        <div class="toolbar">
+          <button type="button" id="export-button" class="secondary">CSVエクスポート</button>
+          <label class="import-button">CSVインポート<input type="file" id="import-file" accept=".csv,.tsv,text/csv,text/tab-separated-values"></label>
+          <button type="button" id="reload-button" class="secondary">再読み込み</button>
+        </div>
       </div>
       <p id="status" class="status"></p>
       <div id="items" class="items"></div>

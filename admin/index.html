@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>燃えないゴミ箱 管理ページ</title>
+  <link rel="stylesheet" href="/admin/style.css">
+</head>
+<body>
+  <main class="admin-shell">
+    <header>
+      <p class="eyebrow">Cloudflare D1 Admin</p>
+      <h1>作品データ管理</h1>
+      <p>スプレッドシート/GAS の代わりに Cloudflare D1 に登録した作品を追加・編集・削除します。</p>
+    </header>
+
+    <section class="panel auth-panel" id="auth-panel">
+      <h2>管理者ログイン</h2>
+      <p>Cloudflare Pages の環境変数 <code>ADMIN_PASSWORD</code> に設定したパスワードを入力してください。</p>
+      <form id="auth-form" class="auth-form">
+        <input id="password" type="password" autocomplete="current-password" placeholder="管理者パスワード" required>
+        <button type="submit">ログイン</button>
+      </form>
+    </section>
+
+    <section class="panel hidden" id="editor-panel">
+      <div class="panel-heading">
+        <h2 id="form-title">作品を追加</h2>
+        <button type="button" class="secondary" id="reset-button">新規入力に戻す</button>
+      </div>
+      <form id="item-form" class="item-form">
+        <input type="hidden" id="item-id">
+        <label>作品名<input id="text" name="text" required></label>
+        <label>画像URL<input id="imageSrc" name="imageSrc" required></label>
+        <label>掲載先リンク<input id="url" name="url" required></label>
+        <label>背景色<input id="backgroundColor" name="backgroundColor" placeholder="#ffffff / red / rgb(...)" value="#ffffff"></label>
+        <label>サイズ倍率<input id="size" name="size" type="number" step="0.1" min="0.1" value="1"></label>
+        <label>表示順<input id="sortOrder" name="sortOrder" type="number" step="1" value="0"></label>
+        <label class="checkbox"><input id="paused" name="paused" type="checkbox"> サイトを休止ページへリダイレクトする</label>
+        <button type="submit">保存</button>
+      </form>
+    </section>
+
+    <section class="panel hidden" id="list-panel">
+      <div class="panel-heading">
+        <h2>登録済み作品</h2>
+        <div class="toolbar">
+          <button type="button" id="export-button" class="secondary">CSVエクスポート</button>
+          <label class="import-button">CSVインポート<input type="file" id="import-file" accept=".csv,.tsv,text/csv,text/tab-separated-values"></label>
+          <button type="button" id="reload-button" class="secondary">再読み込み</button>
+        </div>
+      </div>
+      <p id="status" class="status"></p>
+      <div id="items" class="items"></div>
+    </section>
+  </main>
+  <script src="/admin/admin.js"></script>
+</body>
+</html>

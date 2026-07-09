@@ -1,0 +1,51 @@
+<!--HTML-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ランダム表示</title>
+</head>
+<body>
+    <!--ロゴ画像-->
+    <img class="slogo" src="./3.png">
+
+    <!--1~150までの番号をランダムで表示するJS-->
+    <script>
+        // 1~150までのランダムな数値を取得
+        const num = Math.floor(Math.random() * 150) + 1;
+        // ランダムな数値を表示
+        document.write('<div class="num">'+num+'</div>');
+    </script>
+
+    <!--SNSロゴ（インスタとX）とハイパーURLを追加-->
+    <div class="logo">
+        <a href="https://www.instagram.com/oecu.coop.gi/"><img src="https://ferret-one.akamaized.net/images/649be146aed96504432c2be9/normal.png" alt="Instagram" width="60" height="60"></a>
+           </div>
+    <!--CSS .numを太字ゴシックにする-->
+    <style>
+        .slogo{
+            width: 80%;
+        }
+        h1 {
+            font-size: 24px;
+            text-align: center;
+        }
+        body {
+            font-size: 48px;
+            text-align: center;
+            margin-top: 100px;
+        }
+        .num{
+            font-family: '游ゴシック', 'Yu Gothic', 'メイリオ', sans-serif;
+            font-weight: bold;
+            font-size: 100px;
+
+        }
+        .logo{
+            margin-top: 150px;
+        }
+        </style>
+        
+</body>
+</html>

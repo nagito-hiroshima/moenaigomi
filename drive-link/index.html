@@ -1,0 +1,80 @@
+
+<!doctype html>
+<html lang="ja" >
+<head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# article: http://ogp.me/ns/article#">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://moenaigomi.com/drive-link/" />
+	<meta property="og:site_name" content="Google Drive上の画像ファイルに直リンクするための文字列変換というページ">
+	<meta property="og:descripton" content="フォームに画像の共有URLを入力して［変換］をクリックすると、直リンクのURLを取得できます。">
+	<meta property="og:image" content="https://moenaigomi.com/drive-link/ogp.png">
+
+    <link rel="icon" href="./favicon.ico">
+
+	<title>Google Drive上の画像ファイルに直リンクするための文字列変換</title>
+</head>
+<body>
+	<div class="container my-2">
+		<header class="row mb-3">
+			<div class="col-12">
+				<h1>Google Drive上の画像ファイルに<br>
+				直リンクするための文字列変換</h1>
+			</div>
+
+			<div class="col-12">
+				<p>下のフォームに画像の共有URLを入力して［変換］をクリックすると、直リンクのURLを取得できます。ご利用は計画的に。</p>
+			</div>
+		</header>
+
+		<div class="row mb-2">
+			<div class="col-12">
+				<div class="card">
+					<div class="card-header">変換前の文字列</div>
+					<div class="card-body">
+						<form>
+							<div class="form-group">
+								<input type="text" class="form-control" id="shared-url" name="shared-url" placeholder="Googleドライブにあるファイルの共有URL">
+							</div>
+							<a href="#" id="submit" type="submit" class="btn btn-primary btn-sm">変換</a>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row mb-4">
+			<div class="col-12">
+				<div class="card">
+					<div class="card-header">変換後の文字列</div>
+					<div class="card-body">
+						<form>
+							<div class="form-group">
+								<label for="shared-url">画像のURL</label>
+								<input type="text" class="form-control" id="direct-url" name="direct-url">
+							</div>
+							<a id="copy" class="btn btn-outline-secondary btn-sm">コピー</a>
+						</form>
+						<p class="mt-2">プレビュー画像</p>
+						<div id="preview-image"></div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<footer class="row">
+			<div class="col-12">
+				<p id="copyright"></p>
+			</div>
+		</footer>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+	<script src="./script.js"></script>
+</body>
+</html>

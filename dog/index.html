@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>【ランダム犬写真】わんわんわーん</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="./favicon/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon/favicon-16x16.png">
+<link rel="manifest" href="./favicon/site.webmanifest">
+<link rel="mask-icon" href="./favicon/safari-pinned-tab.svg" color="#5bbad5">
+<link rel="shortcut icon" href="./favicon/favicon.ico">
+<meta name="msapplication-TileColor" content="#da532c">
+<meta name="msapplication-config" content="./favicon/browserconfig.xml">
+<meta name="theme-color" content="#ffffff">
+<meta charset="utf-8">
+
+<meta property="og:url" content="https://nagito-hiroshima.github.io/cphot/">
+<meta property="og:title" content="【ランダム犬写真】わんわんわーん">
+<meta property="og:description" content="ランダムで犬の写真を表示する。リロードすることで新しい犬と出会うことができます。">
+<meta property="og:type" content="site">
+<meta property="og:image" content="https://nagito-hiroshima.github.io/dphoto/favicon/android-chrome-256x256.png">
+
+ 
+  <style>
+    *{
+        margin: 0;
+        padding: 0;
+    }
+    body {
+      background-image: url("");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .content {
+        position: absolute;
+        bottom: 0px;
+      text-align: center;
+      color: white;
+      text-shadow: 1px 2px 3px #808080;
+      left: 50%;
+    transform: translate(-50%, -50%);
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    }
+    a{
+        color: gray;
+    }
+    p{
+        color: gray;
+    }
+    
+    img{
+      margin: 6px 10px;
+    }
+    .copylight{
+      text-decoration:none;
+      font-size: 12px;
+      color: honeydew;
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <h1>ランダム犬写真</h1>
+    <p><a href="https://dog.ceo/dog-api/">Dog API</a></p>
+    <p><a class="copylight" href="https://moenaigomi">ⓒ2023 moenaigomi.com</a></p>
+    <a href="https://moenaigomi.com/cat"><img src="./cat.png"></a>
+    <a href="https://moenaigomi.com/dog"><img src="./dog.png"></a>
+    <a href="https://moenaigomi.com/shiba"><img src="./shiba.png"></a>
+    <!--<button onclick="getRandomCat()">新しい写真を表示</button>-->
+  </div>
+
+  <script>
+     document.oncontextmenu = function () {return false;}
+    // ランダムな犬の写真を取得し、背景に設定する関数
+    function setRandomCatBackground() {
+      fetch('https://dog.ceo/api/breeds/image/random')
+        .then(response => response.json())
+        .then(data => {
+          var catImageUrl = data.message;
+          document.body.style.backgroundImage = `url(${catImageUrl})`;
+        })
+        .catch(error => console.error(error));
+    }
+
+    // ページロード時にランダムな犬の写真を背景に設定
+    window.addEventListener('load', setRandomCatBackground);
+  </script>
+</body>
+</html>

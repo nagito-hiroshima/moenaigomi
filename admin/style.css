@@ -7,7 +7,7 @@ h1 { margin: 4px 0 8px; font-size: clamp(28px, 5vw, 48px); }
 .panel { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 18px; padding: 20px; margin: 18px 0; box-shadow: 0 20px 60px rgba(0,0,0,.28); }
 .hidden { display: none; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.auth-form, .item-form { display: grid; gap: 14px; }
+.item-form { display: grid; gap: 14px; }
 .item-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .item-form label:nth-child(2), .item-form label:nth-child(3), .item-form label:nth-child(4), .checkbox { grid-column: 1 / -1; }
 label { display: grid; gap: 6px; font-weight: 700; }

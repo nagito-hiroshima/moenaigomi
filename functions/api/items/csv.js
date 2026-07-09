@@ -8,25 +8,6 @@ const json = (body, init = {}) => new Response(JSON.stringify(body), {
   },
 });
 
-const isAuthorized = (request, env) => {
-  const expected = env.ADMIN_PASSWORD || env.ADMIN_TOKEN;
-  if (!expected) return false;
-  const match = (request.headers.get('authorization') || '').match(/^Basic\s+(.+)$/i);
-  if (!match) return false;
-  try {
-    const decoded = atob(match[1]);
-    const index = decoded.indexOf(':');
-    return (index >= 0 ? decoded.slice(index + 1) : decoded) === expected;
-  } catch (_error) {
-    return false;
-  }
-};
-
-const requireAdmin = (request, env) => isAuthorized(request, env) ? null : json(
-  { error: 'Unauthorized' },
-  { status: 401, headers: { 'www-authenticate': 'Basic realm="moenaigomi admin", charset="UTF-8"' } }
-);
-
 const escapeCsv = (value) => {
   const text = String(value ?? '');
   if (!/[",\r\n]/.test(text)) return text;
@@ -99,10 +80,7 @@ const toItem = (headers, row, index) => {
   return item;
 };
 
-export async function onRequestGet({ request, env }) {
-  const unauthorized = requireAdmin(request, env);
-  if (unauthorized) return unauthorized;
-
+export async function onRequestGet({ env }) {
   const { results } = await env.DB.prepare(
     'SELECT text, imageSrc, url, backgroundColor, size FROM items ORDER BY sortOrder ASC, id ASC'
   ).all();
@@ -125,9 +103,6 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-  const unauthorized = requireAdmin(request, env);
-  if (unauthorized) return unauthorized;
-
   const text = (await request.text()).replace(/^\uFEFF/, '').trim();
   if (!text) return json({ errors: ['CSVが空です。'] }, { status: 400 });
 

@@ -1,0 +1,29 @@
+:root { color-scheme: dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { margin: 0; background: #071124; color: #e6f7ff; }
+.admin-shell { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 40px 0; }
+header { margin-bottom: 24px; }
+h1 { margin: 4px 0 8px; font-size: clamp(28px, 5vw, 48px); }
+.eyebrow { color: #7fd7ff; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.panel { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 18px; padding: 20px; margin: 18px 0; box-shadow: 0 20px 60px rgba(0,0,0,.28); }
+.hidden { display: none; }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.auth-form, .item-form { display: grid; gap: 14px; }
+.item-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.item-form label:nth-child(2), .item-form label:nth-child(3), .item-form label:nth-child(4), .checkbox { grid-column: 1 / -1; }
+label { display: grid; gap: 6px; font-weight: 700; }
+input { border: 1px solid rgba(255,255,255,.16); border-radius: 12px; padding: 12px 14px; color: #fff; background: rgba(0,0,0,.28); font: inherit; }
+.checkbox { display: flex; align-items: center; gap: 10px; }
+.checkbox input { width: 18px; height: 18px; }
+button, .import-button { border: 0; border-radius: 12px; padding: 12px 18px; color: #fff; background: linear-gradient(135deg,#7c5cff,#4b3bdb); font-weight: 800; cursor: pointer; }
+button.secondary, .import-button { background: rgba(255,255,255,.12); }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+.import-button input { display: none; }
+button.danger { background: linear-gradient(135deg,#ff5c7a,#db3b3b); }
+.status { min-height: 1.5em; color: #9ee9ff; }
+.items { display: grid; gap: 12px; }
+.item-card { display: grid; grid-template-columns: 72px 1fr auto; gap: 14px; align-items: center; padding: 12px; border-radius: 14px; background: rgba(0,0,0,.22); }
+.item-card img { width: 72px; height: 72px; object-fit: cover; border-radius: 12px; background: rgba(255,255,255,.1); }
+.item-card h3 { margin: 0 0 4px; }
+.item-card p { margin: 0; color: #bdd7e8; word-break: break-all; }
+.card-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 720px) { .item-form, .item-card { grid-template-columns: 1fr; } .card-actions { justify-content: flex-start; } }

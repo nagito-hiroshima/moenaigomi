@@ -205,50 +205,40 @@ function wait(ms) {
       const WAIT_MS = 80; // 各ループ間の遅延（ms）。必要なら調整してください。
 
 
-// スプレッドシートからデータを取得する
+// Cloudflare D1 から作品データを取得する
 function getSpreadSheetData() {
   window.__moenaigomi_loading.inc(5)
   window.__moenaigomi_loading.log('作品データベースサーバーに接続しています...');
 
-  const url = "https://script.google.com/macros/s/AKfycbwJcyebutI6_tNCmV75O5FWMEqloMrPov62ShsT35D6CGOvacWuuwcAAW40pkxUGvBT/exec";
-  fetch(url)
+  fetch('/api/items')
     .then((res) => {
+      if (!res.ok) {
+        throw new Error('作品データの取得に失敗しました。');
+      }
       return res.json();
     })
     .then((data) => {
       console.log("取得したデータ:");
       console.table(data);
 
-      if (data[0]["休止"]) {
-        //error.htmlへリダイレクト
+      if (data.some((item) => item.paused)) {
+        // error.htmlへリダイレクト
         window.location.href = "error.html";
         return;
-
       }
 
       window.__moenaigomi_loading.inc(20)
       window.__moenaigomi_loading.log('作品データベースサーバーからデータを取得しました。');
 
-
-      //かえってきたオブジェクトのキーを変更
-      const keys = Object.keys(data[0]);
-      window.__moenaigomi_loading.log('作品データを解析しています...');
-      const newKeys = keys.map((key) => {
-        return key.replace("作品名", "text").replace("画像", "imageSrc").replace("背景色", "backgroundColor").replace("掲載先リンク", "url").replace("サイズ", "size");
-      });
-      //オブジェクトのキーを変更
-      const newData = data.map((d) => {
-        const newObject = {};
-        keys.forEach((key, index) => {
-          newObject[newKeys[index]] = d[key];
-        });
-        return newObject;
-      }
-      );
-      console.log("キー変更後のデータ:");
+      const newData = data.map((d) => ({
+        text: d.text,
+        imageSrc: d.imageSrc,
+        backgroundColor: d.backgroundColor,
+        url: d.url,
+        size: d.size,
+      }));
+      console.log("作品データ:");
       console.table(newData);
-
-
 
       (async function createSequential() {
         for (let i = 0; i < newData.length; i++) {
@@ -266,14 +256,15 @@ function getSpreadSheetData() {
       })();
       // --- ここまで ---
     })
-    //エラーが発生した場合
+    // エラーが発生した場合
     .catch((error) => {
-      console.error("システムメンテナンス中");
+      console.error("作品データベースサーバーに接続できませんでした");
       console.error(error);
-    })
-    ;
+      window.__moenaigomi_loading.log('作品データベースサーバーに接続できませんでした。');
+    });
 
 }
+
 
 const lis = document.querySelectorAll("li");
 const a = document.querySelectorAll("li a");

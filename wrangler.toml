@@ -4,5 +4,5 @@ pages_build_output_dir = "."
 
 [[d1_databases]]
 binding = "DB"
-database_name = "moenaigomi"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_name = "moenaigomi-db"
+database_id = "ac916b62-a967-40a4-8e83-0e33fd10db5f"

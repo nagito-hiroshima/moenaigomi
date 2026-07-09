@@ -1,20 +1,13 @@
-const state = { password: sessionStorage.getItem('adminPassword') || '', items: [] };
+const state = { items: [] };
 const $ = (id) => document.getElementById(id);
-const authPanel = $('auth-panel');
 const editorPanel = $('editor-panel');
-const listPanel = $('list-panel');
 const status = $('status');
-
-function authHeader() {
-  return `Basic ${btoa(`admin:${state.password}`)}`;
-}
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
     ...options,
     headers: {
       'content-type': 'application/json',
-      authorization: authHeader(),
       ...(options.headers || {}),
     },
   });
@@ -27,7 +20,7 @@ async function api(path, options = {}) {
 
 async function exportCsv() {
   status.textContent = 'CSVを作成中...';
-  const response = await fetch('/api/items/csv', { headers: { authorization: authHeader() } });
+  const response = await fetch('/api/items/csv');
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.error || `HTTP ${response.status}`);
@@ -52,7 +45,6 @@ async function importCsv(file) {
   const response = await fetch('/api/items/csv', {
     method: 'POST',
     headers: {
-      authorization: authHeader(),
       'content-type': file.type || 'text/csv; charset=utf-8',
     },
     body: await file.text(),
@@ -63,12 +55,6 @@ async function importCsv(file) {
   }
   status.textContent = `${body.imported}件をインポートしました。`;
   await loadItems();
-}
-
-function showApp() {
-  authPanel.classList.add('hidden');
-  editorPanel.classList.remove('hidden');
-  listPanel.classList.remove('hidden');
 }
 
 function resetForm() {
@@ -107,22 +93,6 @@ async function loadItems() {
   renderItems();
   status.textContent = `${state.items.length}件を読み込みました。`;
 }
-
-$('auth-form').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  state.password = $('password').value;
-  sessionStorage.setItem('adminPassword', state.password);
-  try {
-    showApp();
-    await loadItems();
-  } catch (error) {
-    sessionStorage.removeItem('adminPassword');
-    authPanel.classList.remove('hidden');
-    editorPanel.classList.add('hidden');
-    listPanel.classList.add('hidden');
-    alert(`ログインできませんでした: ${error.message}`);
-  }
-});
 
 $('item-form').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -174,14 +144,4 @@ $('reset-button').addEventListener('click', resetForm);
 $('export-button').addEventListener('click', () => exportCsv().catch((error) => alert(`エクスポートできませんでした: ${error.message}`)));
 $('import-file').addEventListener('change', (event) => importCsv(event.target.files[0]).catch((error) => alert(`インポートできませんでした: ${error.message}`)).finally(() => { event.target.value = ''; }));
 $('reload-button').addEventListener('click', loadItems);
-
-if (state.password) {
-  $('password').value = state.password;
-  showApp();
-  loadItems().catch(() => {
-    sessionStorage.removeItem('adminPassword');
-    authPanel.classList.remove('hidden');
-    editorPanel.classList.add('hidden');
-    listPanel.classList.add('hidden');
-  });
-}
+loadItems().catch((error) => alert(`読み込みできませんでした: ${error.message}`));

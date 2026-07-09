@@ -6,31 +6,6 @@ const json = (body, init = {}) => new Response(JSON.stringify(body), {
   },
 });
 
-const isAuthorized = (request, env) => {
-  const expected = env.ADMIN_PASSWORD || env.ADMIN_TOKEN;
-  if (!expected) return false;
-  const header = request.headers.get('authorization') || '';
-  const match = header.match(/^Basic\s+(.+)$/i);
-  if (!match) return false;
-
-  try {
-    const decoded = atob(match[1]);
-    const index = decoded.indexOf(':');
-    const password = index >= 0 ? decoded.slice(index + 1) : decoded;
-    return password === expected;
-  } catch (_error) {
-    return false;
-  }
-};
-
-const requireAdmin = (request, env) => {
-  if (isAuthorized(request, env)) return null;
-  return json({ error: 'Unauthorized' }, {
-    status: 401,
-    headers: { 'www-authenticate': 'Basic realm="moenaigomi admin", charset="UTF-8"' },
-  });
-};
-
 const normalizeItem = (item) => ({
   id: item.id,
   text: item.text,
@@ -70,9 +45,6 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-  const unauthorized = requireAdmin(request, env);
-  if (unauthorized) return unauthorized;
-
   const input = await request.json().catch(() => ({}));
   const { item, errors } = validateItem(input);
   if (errors.length) return json({ errors }, { status: 400 });

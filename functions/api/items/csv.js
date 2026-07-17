@@ -1,4 +1,4 @@
-const HEADERS = ['作品名', '画像', '掲載先リンク', '背景色', 'サイズ'];
+const HEADERS = ['作品名', '画像', '説明文', '追加画像', '追加情報', '掲載先リンク', '背景色', 'サイズ'];
 
 const json = (body, init = {}) => new Response(JSON.stringify(body), {
   ...init,
@@ -70,6 +70,9 @@ const toItem = (headers, row, index) => {
   const item = {
     text: String(values['作品名'] || values.text || '').trim(),
     imageSrc: String(values['画像'] || values.imageSrc || '').trim(),
+    description: String(values['説明文'] || values.description || '').trim(),
+    additionalImages: String(values['追加画像'] || values.additionalImages || '').trim(),
+    additionalInfo: String(values['追加情報'] || values.additionalInfo || '').trim(),
     url: String(values['掲載先リンク'] || values.url || '').trim(),
     backgroundColor: String(values['背景色'] || values.backgroundColor || '').trim(),
     size: String(values['サイズ'] || values.size || '1').trim() || '1',
@@ -82,12 +85,15 @@ const toItem = (headers, row, index) => {
 
 export async function onRequestGet({ env }) {
   const { results } = await env.DB.prepare(
-    'SELECT text, imageSrc, url, backgroundColor, size FROM items ORDER BY sortOrder ASC, id ASC'
+    'SELECT text, imageSrc, description, additionalImages, additionalInfo, url, backgroundColor, size FROM items ORDER BY sortOrder ASC, id ASC'
   ).all();
 
   const rows = [HEADERS, ...results.map((item) => [
     item.text,
     item.imageSrc,
+    item.description || '',
+    item.additionalImages || '',
+    item.additionalInfo || '',
     item.url,
     item.backgroundColor || '',
     item.size || '1',
@@ -122,8 +128,8 @@ export async function onRequestPost({ request, env }) {
   const statements = [env.DB.prepare('DELETE FROM items')];
   items.forEach((item) => {
     statements.push(env.DB.prepare(
-      'INSERT INTO items (text, imageSrc, backgroundColor, url, size, paused, sortOrder) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).bind(item.text, item.imageSrc, item.backgroundColor, item.url, item.size, item.paused, item.sortOrder));
+      'INSERT INTO items (text, imageSrc, description, additionalImages, additionalInfo, backgroundColor, url, size, paused, sortOrder) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(item.text, item.imageSrc, item.description, item.additionalImages, item.additionalInfo, item.backgroundColor, item.url, item.size, item.paused, item.sortOrder));
   });
   await env.DB.batch(statements);
 

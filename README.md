@@ -54,6 +54,26 @@ npx wrangler d1 migrations apply moenaigomi-db --remote
 npx wrangler d1 execute moenaigomi-db --remote --command "PRAGMA table_info(items);"
 ```
 
+現在の `items` テーブルが `description`、`additionalImages`、`additionalInfo` を含まない旧スキーマの場合は、次のどちらか一方で3列を追加できます。通常は履歴が残るマイグレーション方式を使用してください。
+
+```bash
+# 推奨: リポジトリの 0002 マイグレーションを適用
+npx wrangler d1 migrations apply moenaigomi-db --remote
+
+# マイグレーション管理外で直接SQLを流す必要がある場合のみ使用
+npx wrangler d1 execute moenaigomi-db --remote --file=migrations/0002_add_item_details.sql
+```
+
+Cloudflare Dashboard の **D1 → moenaigomi-db → Console** から実行する場合のSQLは以下です。各文は一度だけ実行します。
+
+```sql
+ALTER TABLE items ADD COLUMN description TEXT NOT NULL DEFAULT '';
+ALTER TABLE items ADD COLUMN additionalImages TEXT NOT NULL DEFAULT '';
+ALTER TABLE items ADD COLUMN additionalInfo TEXT NOT NULL DEFAULT '';
+```
+
+すでに同名の列があるDBに直接SQLを再実行すると `duplicate column name` になります。先に `PRAGMA table_info(items);` で現在の列を確認してください。また、`d1 migrations apply` と `d1 execute --file` を同じDBに対して両方実行しないでください。
+
 新しいDBを作り直す場合は、`npx wrangler d1 create moenaigomi-db` の出力にある `database_id` を `wrangler.toml` に設定し、Cloudflare Pages の **Settings → Bindings** でも D1 binding `DB` を同じデータベースへ接続してから再デプロイします。
 
 ## Cloudflare Access と manifest の CORS エラー

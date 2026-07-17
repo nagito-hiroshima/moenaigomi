@@ -1,6 +1,7 @@
 (function () {
     const popup = document.getElementById('explain-popup');
     const closeBtn = document.getElementById('explain-close');
+    const desktopViewport = window.matchMedia('(min-width: 521px)');
     const INACTIVITY = 2500;
     let timer = null;
     let visible = false;
@@ -17,6 +18,10 @@
     }
     function resetTimer() {
         clearTimeout(timer);
+        if (!desktopViewport.matches) {
+            hidePopup();
+            return;
+        }
         timer = setTimeout(showPopup, INACTIVITY);
     }
 
@@ -33,5 +38,6 @@
     });
 
     closeBtn.addEventListener('click', () => { hidePopup(); resetTimer(); });
+    desktopViewport.addEventListener('change', resetTimer);
 
 })();

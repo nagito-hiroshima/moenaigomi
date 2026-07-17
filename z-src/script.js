@@ -1,418 +1,168 @@
-window.__moenaigomi_loading.inc(5)
-window.__moenaigomi_loading.log('ページの読み込みが完了しました。');
+const container = document.getElementById('button-container');
+const dialog = document.getElementById('project-dialog');
+const dialogContent = document.getElementById('dialog-content');
+const viewButtons = document.querySelectorAll('.view-button');
+const uiToggle = document.getElementById('ui-toggle');
+let items = [];
+let animationFrameId = null;
+let animationPaused = false;
+let bounceLabelsVisible = false;
 
-var buttonContainer = document.getElementById('button-container');
-var windowWidth = window.innerWidth;
-var windowHeight = window.innerHeight;
+window.__moenaigomi_loading.inc(5);
+window.__moenaigomi_loading.log('作品データベースに接続しています…');
 
-// 追加: アニメーション制御用の変数
-var animationFrameId = null;
-var animationPaused = false;
-
-var buttonContents = getSpreadSheetData();
-
-function createFloatingButton(content) {
-  var button = document.createElement('button');
-  button.classList.add('floating-button');
-
-  var image = document.createElement('img');
-  image.src = content.imageSrc;
-  button.appendChild(image);
-
-  var text = document.createElement('p');
-  text.textContent = content.text;
-  button.appendChild(text);
-
-  // 背景色を指定（スプレッドシートの値をそのまま使う）
-  if (content.backgroundColor) {
-    button.style.backgroundColor = content.backgroundColor;
-  }
-
-  // 文字色を背景色に合わせて自動設定
-  var bgForCalc = content.backgroundColor || window.getComputedStyle(button).backgroundColor || window.getComputedStyle(document.body).backgroundColor;
-  var contrast = getContrastColor(bgForCalc);
-  button.style.color = contrast;
-  text.style.color = contrast;
-
-  var buttonWidth = button.offsetWidth;
-  var buttonHeight = button.offsetHeight;
-
-  var overlapping = true;
-  var maxAttempts = 100; // 最大試行回数
-  var attempt = 0;
-
-  //サイズ調整(倍率)
-  var sizeMultiplier = 1.0;
-  if (content.size) {
-    var sizeValue = parseFloat(content.size);
-    if (!isNaN(sizeValue) && sizeValue > 0) {
-      sizeMultiplier = sizeValue;
-    }
-  }
-  button.style.transform = 'scale(' + sizeMultiplier + ')';
-  buttonWidth = buttonWidth * sizeMultiplier;
-  buttonHeight = buttonHeight * sizeMultiplier;
-
-  while (overlapping && attempt < maxAttempts) {
-    overlapping = false;
-
-    var randomX = Math.floor(Math.random() * (windowWidth - 400 - buttonWidth));
-    var randomY = Math.floor(Math.random() * (windowHeight - 400 - buttonHeight));
-
-    // 他のボタンとの重なりをチェック
-    var buttons = document.getElementsByClassName('floating-button');
-    for (var i = 0; i < buttons.length; i++) {
-      var otherButton = buttons[i];
-      var otherButtonRect = otherButton.getBoundingClientRect();
-
-      if (
-        randomX + buttonWidth + 200 > otherButtonRect.left &&
-        randomX < otherButtonRect.right &&
-        randomY + buttonHeight + 200 > otherButtonRect.top &&
-        randomY < otherButtonRect.bottom
-      ) {
-        overlapping = true;
-        break;
-      }
-    }
-
-    attempt++;
-  }
-
-  if (!overlapping) {
-    button.style.left = randomX + 'px';
-    button.style.top = randomY + 'px';
-  } else {
-    console.log('Failed to position button without overlapping.'); // 重なりが解消できなかった場合にメッセージを表示
-  }
-
-  button.addEventListener('click', function () {
-    window.open(content.url, '_blank');
-  });
-
-  buttonContainer.appendChild(button);
+function additionalImages(item) {
+  if (Array.isArray(item.additionalImages)) return item.additionalImages.filter(Boolean);
+  return String(item.additionalImages || '').split(/\r?\n|,/).map((url) => url.trim()).filter(Boolean);
 }
 
+function projectCard(item, index) {
+  const card = document.createElement('button');
+  card.type = 'button';
+  card.className = 'project-card';
+  card.style.setProperty('--card-color', item.backgroundColor || '#cbc8bf');
+  card.innerHTML = `
+    <span class="card-image">
+      <img src="${escapeAttribute(item.imageSrc)}" alt="" loading="lazy">
+      <span class="card-index">${String(index + 1).padStart(2, '0')}</span>
+      <span class="card-arrow" aria-hidden="true">↗</span>
+    </span>
+    <span class="card-meta"><h3>${escapeHtml(item.text)}</h3><p>${escapeHtml(item.description || '小さなアイデアから生まれたWeb作品です。')}</p></span>`;
+  card.addEventListener('click', () => openProject(item, index));
+  return card;
+}
 
+function renderCards() {
+  stopAnimation();
+  container.className = 'project-grid';
+  container.innerHTML = '';
+  items.forEach((item, index) => container.appendChild(projectCard(item, index)));
+}
 
+function openProject(item, index) {
+  const images = [item.imageSrc, ...additionalImages(item)].slice(0, 5);
+  dialogContent.innerHTML = `<div class="dialog-layout">
+    <div class="dialog-gallery" style="--card-color:${escapeAttribute(item.backgroundColor || '#cbc8bf')}">
+      ${images.map((src) => `<img src="${escapeAttribute(src)}" alt="${escapeAttribute(item.text)} の画面">`).join('')}
+    </div>
+    <div class="dialog-copy"><p class="eyebrow">PROJECT ${String(index + 1).padStart(2, '0')}</p>
+      <h2>${escapeHtml(item.text)}</h2>
+      <p class="dialog-description">${escapeHtml(item.description || '小さなアイデアから生まれたWeb作品です。')}</p>
+      ${item.additionalInfo ? `<div class="additional-info">${escapeHtml(item.additionalInfo)}</div>` : ''}
+      <a class="visit-link" href="${escapeAttribute(item.url)}" target="_blank" rel="noopener">作品をひらく <span>↗</span></a>
+    </div></div>`;
+  dialog.showModal();
+}
+
+function renderBouncing() {
+  container.className = '';
+  container.innerHTML = '';
+  items.forEach((item, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'floating-button';
+    button.style.backgroundColor = item.backgroundColor || '#cbc8bf';
+    button.style.left = `${30 + Math.random() * Math.max(1, innerWidth - 170)}px`;
+    button.style.top = `${80 + Math.random() * Math.max(1, innerHeight - 240)}px`;
+    button.speedX = (Math.random() > .5 ? 1 : -1) * (1 + Math.random() * .7);
+    button.speedY = (Math.random() > .5 ? 1 : -1) * (1 + Math.random() * .7);
+    button.innerHTML = `<img src="${escapeAttribute(item.imageSrc)}" alt=""><p>${escapeHtml(item.text)}</p>`;
+    button.title = item.text;
+    button.addEventListener('click', () => openProject(item, index));
+    container.appendChild(button);
+  });
+  startAnimation();
+}
 
 function animateButtons() {
-  var buttons = document.getElementsByClassName('floating-button');
-
-  for (var i = 0; i < buttons.length; i++) {
-    var button1 = buttons[i];
-
-    var currentX1 = parseInt(button1.style.left) || 0;
-    var currentY1 = parseInt(button1.style.top) || 0;
-
-    var speedX1 = button1.speedX || Math.floor((Math.random() * 1.5) + 1); // 速度のランダムな初期値
-    var speedY1 = button1.speedY || Math.floor((Math.random() * 1.5) + 1); // 速度のランダムな初期値
-
-
-    var newX1 = currentX1 + speedX1;
-    var newY1 = currentY1 + speedY1;
-
-
-    // 壁に当たったら速度を反転させる
-    if (newX1 <= 0 || newX1 >= windowWidth - button1.offsetWidth) {
-      speedX1 = -speedX1; newX1 = Math.min(newX1, windowWidth - button1.offsetWidth);
-    }
-    if (newY1 <= 0 || newY1 >= windowHeight - button1.offsetHeight) {
-      speedY1 = -speedY1;
-      newY1 = Math.min(newY1, windowHeight - button1.offsetHeight);
-    }
-
-    for (var j = 0; j < buttons.length; j++) {
-      if (i !== j) {
-        var button2 = buttons[j];
-        if (checkCollision(button1, button2)) {
-          var tempX = speedX1;
-          var tempY = speedY1;
-          speedX1 = button2.speedX;
-          speedY1 = button2.speedY;
-          button2.speedX = tempX;
-          button2.speedY = tempY;
-
-          newX1 = currentX1 + speedX1;
-          newY1 = currentY1 + speedY1;
-
-          break;
-        }
-      }
-    }
-
-    button1.style.left = newX1 + 'px';
-    button1.style.top = newY1 + 'px';
-
-    button1.speedX = speedX1;
-    button1.speedY = speedY1;
+  const buttons = Array.from(document.querySelectorAll('.floating-button'));
+  buttons.forEach((button) => {
+    let x = Number.parseFloat(button.style.left) + button.speedX;
+    let y = Number.parseFloat(button.style.top) + button.speedY;
+    if (x <= 0 || x >= innerWidth - button.offsetWidth) { button.speedX *= -1; x = Math.max(0, Math.min(x, innerWidth - button.offsetWidth)); }
+    if (y <= 0 || y >= innerHeight - button.offsetHeight) { button.speedY *= -1; y = Math.max(0, Math.min(y, innerHeight - button.offsetHeight)); }
+    button.style.left = `${x}px`; button.style.top = `${y}px`;
+  });
+  for (let i = 0; i < buttons.length; i++) {
+    for (let j = i + 1; j < buttons.length; j++) resolveCollision(buttons[i], buttons[j]);
   }
-
-  // フレームIDを保持してキャンセル可能にする
   animationFrameId = requestAnimationFrame(animateButtons);
 }
 
-// 追加: アニメーション開始/停止制御関数（グローバル）
-function startAnimation() {
-  if (animationFrameId === null) {
-    animationPaused = false;
-    // 最初のフレームを開始
-    animateButtons();
-    // ポーズボタンが存在すれば見た目を再生中に更新
-    var pb = document.getElementById('pause-btn');
-    if (pb) {
-      pb.textContent = '⏸';
-      // 変更: 再生中は薄色（色を逆転）
-      pb.style.background = 'rgba(81, 81, 81, 0.39)';
-    }
+function resolveCollision(first, second) {
+  const firstRect = first.getBoundingClientRect();
+  const secondRect = second.getBoundingClientRect();
+  const overlapX = Math.min(firstRect.right, secondRect.right) - Math.max(firstRect.left, secondRect.left);
+  const overlapY = Math.min(firstRect.bottom, secondRect.bottom) - Math.max(firstRect.top, secondRect.top);
+  if (overlapX <= 0 || overlapY <= 0) return;
+
+  if (overlapX < overlapY) {
+    const direction = firstRect.left < secondRect.left ? -1 : 1;
+    first.style.left = `${Number.parseFloat(first.style.left) + direction * overlapX / 2}px`;
+    second.style.left = `${Number.parseFloat(second.style.left) - direction * overlapX / 2}px`;
+    [first.speedX, second.speedX] = [second.speedX, first.speedX];
+  } else {
+    const direction = firstRect.top < secondRect.top ? -1 : 1;
+    first.style.top = `${Number.parseFloat(first.style.top) + direction * overlapY / 2}px`;
+    second.style.top = `${Number.parseFloat(second.style.top) - direction * overlapY / 2}px`;
+    [first.speedY, second.speedY] = [second.speedY, first.speedY];
   }
 }
-function stopAnimation() {
-  if (animationFrameId !== null) {
-    cancelAnimationFrame(animationFrameId);
-    animationFrameId = null;
-    animationPaused = true;
-    var pb = document.getElementById('pause-btn');
-    if (pb) {
-      pb.textContent = '▶';
-      // 変更: 停止時はグラデーション（色を逆転）
-      pb.style.background = 'linear-gradient(135deg,#7c5cff,#4b3bdb)';
-    }
-  }
+function startAnimation() { if (!animationFrameId) { animationPaused = false; animationFrameId = requestAnimationFrame(animateButtons); updatePauseButton(); } }
+function stopAnimation() { if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; updatePauseButton(); }
+function updatePauseButton() { const button = document.getElementById('pause-btn'); if (button) button.textContent = animationFrameId ? 'Ⅱ' : '▶'; }
+function toggleBounceLabels() {
+  bounceLabelsVisible = !bounceLabelsVisible;
+  document.body.classList.toggle('show-bounce-labels', bounceLabelsVisible);
+  const button = document.getElementById('label-btn');
+  button.classList.toggle('active', bounceLabelsVisible);
+  button.setAttribute('aria-pressed', String(bounceLabelsVisible));
 }
 
-function checkCollision(element1, element2) {
-  var rect1 = element1.getBoundingClientRect();
-  var rect2 = element2.getBoundingClientRect();
-
-  return (
-    rect1.left < rect2.right &&
-    rect1.right > rect2.left &&
-    rect1.top < rect2.bottom &&
-    rect1.bottom > rect2.top
-  );
+function setView(view) {
+  const bounce = view === 'bounce';
+  document.body.classList.toggle('bounce-view', bounce);
+  viewButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === view));
+  uiToggle.querySelector('i').className = bounce ? 'fas fa-th-large' : 'fas fa-expand-arrows-alt';
+  uiToggle.querySelector('strong').textContent = bounce ? 'カード表示へ' : '跳ねる表示へ';
+  uiToggle.setAttribute('aria-label', bounce ? 'カード表示に切り替える' : '跳ねる表示に切り替える');
+  localStorage.setItem('moenaigomi-view', view);
+  bounce ? renderBouncing() : renderCards();
 }
 
+function escapeHtml(value) { const node = document.createElement('div'); node.textContent = String(value || ''); return node.innerHTML; }
+function escapeAttribute(value) { return escapeHtml(value).replace(/`/g, '&#96;'); }
 
-function csschange(stylesheetId) {
-  //hrefの値を変更する
-  document.getElementById("stylesheet").href = "/z-src/" + stylesheetId + ".css";
-}
-function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-      // --- ここから非同期で少しずつログ／ボタン作成する処理 ---
-      const WAIT_MS = 80; // 各ループ間の遅延（ms）。必要なら調整してください。
+const bounceControls = document.createElement('div');
+bounceControls.className = 'bounce-controls';
+bounceControls.innerHTML = '<button type="button" id="label-btn" class="round-control" aria-label="作品タイトルを表示" aria-pressed="false">Aa</button><button type="button" id="pause-btn" class="round-control" aria-label="一時停止">Ⅱ</button><button type="button" id="back-to-cards" class="round-control primary">▦ カードに戻る</button>';
+document.body.appendChild(bounceControls);
+document.getElementById('label-btn').addEventListener('click', toggleBounceLabels);
+document.getElementById('pause-btn').addEventListener('click', () => animationFrameId ? stopAnimation() : startAnimation());
+document.getElementById('back-to-cards').addEventListener('click', () => setView('cards'));
+viewButtons.forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
+uiToggle.addEventListener('click', () => setView(document.body.classList.contains('bounce-view') ? 'cards' : 'bounce'));
+dialog.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
+dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+document.addEventListener('keydown', (event) => {
+  if (!document.body.classList.contains('bounce-view')) return;
+  if (event.code === 'Space') { event.preventDefault(); animationFrameId ? stopAnimation() : startAnimation(); }
+  if (event.code === 'KeyC' && !event.repeat) toggleBounceLabels();
+});
 
-
-// Cloudflare D1 から作品データを取得する
-function getSpreadSheetData() {
-  window.__moenaigomi_loading.inc(5)
-  window.__moenaigomi_loading.log('作品データベースサーバーに接続しています...');
-
-  fetch('/api/items')
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error('作品データの取得に失敗しました。');
-      }
-      return res.json();
-    })
-    .then((data) => {
-      console.log("取得したデータ:");
-      console.table(data);
-
-      if (data.some((item) => item.paused)) {
-        // error.htmlへリダイレクト
-        window.location.href = "error.html";
-        return;
-      }
-
-      window.__moenaigomi_loading.inc(20)
-      window.__moenaigomi_loading.log('作品データベースサーバーからデータを取得しました。');
-
-      const newData = data.map((d) => ({
-        text: d.text,
-        imageSrc: d.imageSrc,
-        backgroundColor: d.backgroundColor,
-        url: d.url,
-        size: d.size,
-      }));
-      console.log("作品データ:");
-      console.table(newData);
-
-      (async function createSequential() {
-        for (let i = 0; i < newData.length; i++) {
-          window.__moenaigomi_loading.inc(newData.length > 0 ? 65 / newData.length : 0);
-          window.__moenaigomi_loading.log(`[${i + 1}/${newData.length}]  ${newData[i]["text"]}のボタンを作成しています...`);
-          createFloatingButton(newData[i]);
-          // 少し待ってUIのブロッキングを抑える
-          await wait(WAIT_MS);
-        }
-
-        window.__moenaigomi_loading.set(100)
-        window.__moenaigomi_loading.log('すべての作品ボタンを作成しました。アニメーションを開始します。');
-
-        startAnimation();
-      })();
-      // --- ここまで ---
-    })
-    // エラーが発生した場合
-    .catch((error) => {
-      console.error("作品データベースサーバーに接続できませんでした");
-      console.error(error);
-      window.__moenaigomi_loading.log('作品データベースサーバーに接続できませんでした。');
-    });
-
-}
-
-
-const lis = document.querySelectorAll("li");
-const a = document.querySelectorAll("li a");
-
-for (let i = 0; i < lis.length; i++) {
-  lis[i].addEventListener("click", function () {
-    for (let i = 0; i < lis.length; i++) {
-      lis[i].classList.remove("active");
-      a[i].classList.remove("active-text");
-    }
-    this.classList.add("active");
-    a[i].classList.add("active-text");
+fetch('/api/items')
+  .then((response) => { if (!response.ok) throw new Error('作品データの取得に失敗しました。'); return response.json(); })
+  .then((data) => {
+    if (data.some((item) => item.paused)) { location.href = '/error.html'; return; }
+    items = data;
+    document.getElementById('item-count').textContent = `${items.length} PROJECTS`;
+    window.__moenaigomi_loading.log(`${items.length}件の作品を読み込みました。`);
+    window.__moenaigomi_loading.set(100);
+    setView(localStorage.getItem('moenaigomi-view') === 'bounce' ? 'bounce' : 'cards');
+  })
+  .catch((error) => {
+    console.error(error);
+    document.getElementById('item-count').textContent = '読み込めませんでした';
+    window.__moenaigomi_loading.log('作品データベースに接続できませんでした。');
+    window.__moenaigomi_loading.finish();
   });
-}
-
-(function createFloatingTextToggle() {
-  var showText = false;
-
-  function applyStateToButton(btn) {
-    if (!btn || !btn.classList) return;
-    if (showText) btn.classList.add('show-text');
-    else btn.classList.remove('show-text');
-  }
-
-  // トグルボタンを作成
-  var toggle = document.createElement('button');
-  toggle.id = 'toggle-text-btn';
-  toggle.title = 'ラベル表示切替 (C)';
-  toggle.textContent = 'Aa';
-  Object.assign(toggle.style, {
-    position: 'fixed',
-    right: '16px',
-    top: '10px',
-    width: '40px',
-    height: '40px',
-    borderRadius: '10px',
-    background: 'rgba(81, 81, 81, 0.39)',
-    color: '#fff',
-    border: '1px solid rgba(255,255,255,0.08)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    zIndex: 10000,
-    backdropFilter: 'blur(6px)'
-  });
-
-  toggle.addEventListener('click', function () {
-    showText = !showText;
-    var buttons = document.getElementsByClassName('floating-button');
-    for (var i = 0; i < buttons.length; i++) applyStateToButton(buttons[i]);
-    toggle.style.background = showText ? 'linear-gradient(135deg,#7c5cff,#4b3bdb)' : 'rgba(81, 81, 81, 0.39)';
-  });
-
-  document.body.appendChild(toggle);
-
-  // ポーズ／再開ボタン（トグルの下に表示） — 初期は「再生中」見た目にする
-  var pauseBtn = document.createElement('button');
-  pauseBtn.id = 'pause-btn';
-  pauseBtn.title = 'アニメーション一時停止 / 再開（スペースキー）';
-  pauseBtn.textContent = '⏸';
-  Object.assign(pauseBtn.style, {
-    position: 'fixed',
-    right: '16px',
-    top: '58px',
-    width: '40px',
-    height: '40px',
-    borderRadius: '10px',
-    background: 'rgba(81, 81, 81, 0.39)', // 変更: 初期（再生中）は薄色に
-    color: '#fff',
-    border: '1px solid rgba(255,255,255,0.08)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    zIndex: 10000,
-    backdropFilter: 'blur(6px)'
-  });
-
-  pauseBtn.addEventListener('click', function () {
-    if (animationFrameId === null) {
-      // 再開
-      startAnimation();
-    } else {
-      // 一時停止
-      stopAnimation();
-    }
-  });
-
-  //スペースキーでもトグル可能に
-  document.addEventListener('keydown', function (e) {
-    if (e.code === 'Space') {
-      if (animationFrameId === null) {
-        // 再開
-        startAnimation();
-      } else {
-        // 一時停止
-        stopAnimation();
-      }
-    } else if (e.code === "KeyC") {
-      // Cキーでテキスト表示切替
-      toggle.click();
-    }
-  });
-
-  document.body.appendChild(pauseBtn);
-
-  // 新しく追加されるボタンにも現在の状態を適用
-  var container = document.getElementById('button-container') || document.body;
-  var mo = new MutationObserver(function (muts) {
-    muts.forEach(function (mut) {
-      mut.addedNodes.forEach(function (node) {
-        if (node && node.classList && node.classList.contains('floating-button')) {
-          applyStateToButton(node);
-        }
-      });
-    });
-  });
-  mo.observe(container, { childList: true, subtree: false });
-
-})();
-
-/**
- * 色文字列（#hex, rgb(), rgba(), named）をパースして [r,g,b] を返す。
- * DOM を一時的に使ってブラウザの色解釈を利用する（信頼性高め）。
- */
-function parseToRGB(colorStr) {
-  if (!colorStr) return '#000000';
-  var d = document.createElement('div');
-  d.style.color = colorStr;
-  d.style.display = 'none';
-  document.body.appendChild(d);
-  var cs = getComputedStyle(d).color;
-  document.body.removeChild(d);
-  var m = cs.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  if (m) return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
-  return '#000000';
-}
-
-/**
- * 相対輝度を計算し、背景色に応じて文字色を '#000000' または '#ffffff' を返す。
- */
-function getContrastColor(colorStr) {
-  var rgb = parseToRGB(colorStr);
-  if (!rgb) return '#ffffff';
-  // sRGB -> linear
-  var srgb = rgb.map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
-  var lum = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
-  // 輝度が高ければ黒、低ければ白
-  return lum > 0.5 ? '#000000' : '#ffffff';
-}

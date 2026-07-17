@@ -12,6 +12,9 @@ const normalizeItem = (item) => ({
   id: item.id,
   text: item.text,
   imageSrc: item.imageSrc,
+  description: item.description || '',
+  additionalImages: item.additionalImages || '',
+  additionalInfo: item.additionalInfo || '',
   backgroundColor: item.backgroundColor || '',
   url: item.url,
   size: item.size || '1',
@@ -23,6 +26,9 @@ const validateItem = (input) => {
   const item = {
     text: String(input.text || '').trim(),
     imageSrc: String(input.imageSrc || '').trim(),
+    description: String(input.description || '').trim(),
+    additionalImages: String(input.additionalImages || '').trim(),
+    additionalInfo: String(input.additionalInfo || '').trim(),
     backgroundColor: String(input.backgroundColor || '').trim(),
     url: String(input.url || '').trim(),
     size: String(input.size || '1').trim(),
@@ -47,10 +53,10 @@ export async function onRequestPut({ request, env, params }) {
 
   const result = await env.DB.prepare(
     `UPDATE items
-       SET text = ?, imageSrc = ?, backgroundColor = ?, url = ?, size = ?, paused = ?, sortOrder = ?, updatedAt = CURRENT_TIMESTAMP
+       SET text = ?, imageSrc = ?, description = ?, additionalImages = ?, additionalInfo = ?, backgroundColor = ?, url = ?, size = ?, paused = ?, sortOrder = ?, updatedAt = CURRENT_TIMESTAMP
      WHERE id = ?
-     RETURNING id, text, imageSrc, backgroundColor, url, size, paused, sortOrder`
-  ).bind(item.text, item.imageSrc, item.backgroundColor, item.url, item.size, item.paused, item.sortOrder, id).first();
+     RETURNING id, text, imageSrc, description, additionalImages, additionalInfo, backgroundColor, url, size, paused, sortOrder`
+  ).bind(item.text, item.imageSrc, item.description, item.additionalImages, item.additionalInfo, item.backgroundColor, item.url, item.size, item.paused, item.sortOrder, id).first();
 
   if (!result) return json({ error: 'Not found' }, { status: 404 });
   return json(normalizeItem(result));

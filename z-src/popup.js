@@ -34,16 +34,4 @@
 
     closeBtn.addEventListener('click', () => { hidePopup(); resetTimer(); });
 
-    // キー操作の補助：Spaceでpauseトグル、Cでタイトル表示イベントを発火
-    document.addEventListener('keydown', (e) => {
-        if (e.code === 'Space') {
-            e.preventDefault();
-            // カスタムイベントを発火（他スクリプトで受け取って処理）
-            document.dispatchEvent(new CustomEvent('sitePauseToggle', { detail: null }));
-        }
-        if (e.key && (e.key.toLowerCase() === 'c')) {
-            document.dispatchEvent(new CustomEvent('siteShowContentTitle', { detail: null }));
-        }
-    });
-
 })();

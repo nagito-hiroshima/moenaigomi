@@ -6,6 +6,7 @@ const uiToggle = document.getElementById('ui-toggle');
 let items = [];
 let animationFrameId = null;
 let animationPaused = false;
+let bounceLabelsVisible = false;
 
 window.__moenaigomi_loading.inc(5);
 window.__moenaigomi_loading.log('作品データベースに接続しています…');
@@ -74,18 +75,49 @@ function renderBouncing() {
 }
 
 function animateButtons() {
-  document.querySelectorAll('.floating-button').forEach((button) => {
+  const buttons = Array.from(document.querySelectorAll('.floating-button'));
+  buttons.forEach((button) => {
     let x = Number.parseFloat(button.style.left) + button.speedX;
     let y = Number.parseFloat(button.style.top) + button.speedY;
     if (x <= 0 || x >= innerWidth - button.offsetWidth) { button.speedX *= -1; x = Math.max(0, Math.min(x, innerWidth - button.offsetWidth)); }
     if (y <= 0 || y >= innerHeight - button.offsetHeight) { button.speedY *= -1; y = Math.max(0, Math.min(y, innerHeight - button.offsetHeight)); }
     button.style.left = `${x}px`; button.style.top = `${y}px`;
   });
+  for (let i = 0; i < buttons.length; i++) {
+    for (let j = i + 1; j < buttons.length; j++) resolveCollision(buttons[i], buttons[j]);
+  }
   animationFrameId = requestAnimationFrame(animateButtons);
+}
+
+function resolveCollision(first, second) {
+  const firstRect = first.getBoundingClientRect();
+  const secondRect = second.getBoundingClientRect();
+  const overlapX = Math.min(firstRect.right, secondRect.right) - Math.max(firstRect.left, secondRect.left);
+  const overlapY = Math.min(firstRect.bottom, secondRect.bottom) - Math.max(firstRect.top, secondRect.top);
+  if (overlapX <= 0 || overlapY <= 0) return;
+
+  if (overlapX < overlapY) {
+    const direction = firstRect.left < secondRect.left ? -1 : 1;
+    first.style.left = `${Number.parseFloat(first.style.left) + direction * overlapX / 2}px`;
+    second.style.left = `${Number.parseFloat(second.style.left) - direction * overlapX / 2}px`;
+    [first.speedX, second.speedX] = [second.speedX, first.speedX];
+  } else {
+    const direction = firstRect.top < secondRect.top ? -1 : 1;
+    first.style.top = `${Number.parseFloat(first.style.top) + direction * overlapY / 2}px`;
+    second.style.top = `${Number.parseFloat(second.style.top) - direction * overlapY / 2}px`;
+    [first.speedY, second.speedY] = [second.speedY, first.speedY];
+  }
 }
 function startAnimation() { if (!animationFrameId) { animationPaused = false; animationFrameId = requestAnimationFrame(animateButtons); updatePauseButton(); } }
 function stopAnimation() { if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; updatePauseButton(); }
 function updatePauseButton() { const button = document.getElementById('pause-btn'); if (button) button.textContent = animationFrameId ? 'Ⅱ' : '▶'; }
+function toggleBounceLabels() {
+  bounceLabelsVisible = !bounceLabelsVisible;
+  document.body.classList.toggle('show-bounce-labels', bounceLabelsVisible);
+  const button = document.getElementById('label-btn');
+  button.classList.toggle('active', bounceLabelsVisible);
+  button.setAttribute('aria-pressed', String(bounceLabelsVisible));
+}
 
 function setView(view) {
   const bounce = view === 'bounce';
@@ -103,15 +135,20 @@ function escapeAttribute(value) { return escapeHtml(value).replace(/`/g, '&#96;'
 
 const bounceControls = document.createElement('div');
 bounceControls.className = 'bounce-controls';
-bounceControls.innerHTML = '<button type="button" id="pause-btn" class="round-control" aria-label="一時停止">Ⅱ</button><button type="button" id="back-to-cards" class="round-control primary">▦ カードに戻る</button>';
+bounceControls.innerHTML = '<button type="button" id="label-btn" class="round-control" aria-label="作品タイトルを表示" aria-pressed="false">Aa</button><button type="button" id="pause-btn" class="round-control" aria-label="一時停止">Ⅱ</button><button type="button" id="back-to-cards" class="round-control primary">▦ カードに戻る</button>';
 document.body.appendChild(bounceControls);
+document.getElementById('label-btn').addEventListener('click', toggleBounceLabels);
 document.getElementById('pause-btn').addEventListener('click', () => animationFrameId ? stopAnimation() : startAnimation());
 document.getElementById('back-to-cards').addEventListener('click', () => setView('cards'));
 viewButtons.forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
 uiToggle.addEventListener('click', () => setView(document.body.classList.contains('bounce-view') ? 'cards' : 'bounce'));
 dialog.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
 dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
-document.addEventListener('keydown', (event) => { if (event.code === 'Space' && document.body.classList.contains('bounce-view')) { event.preventDefault(); animationFrameId ? stopAnimation() : startAnimation(); } });
+document.addEventListener('keydown', (event) => {
+  if (!document.body.classList.contains('bounce-view')) return;
+  if (event.code === 'Space') { event.preventDefault(); animationFrameId ? stopAnimation() : startAnimation(); }
+  if (event.code === 'KeyC' && !event.repeat) toggleBounceLabels();
+});
 
 fetch('/api/items')
   .then((response) => { if (!response.ok) throw new Error('作品データの取得に失敗しました。'); return response.json(); })

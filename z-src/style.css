@@ -69,10 +69,12 @@ body.bounce-view .section-heading { display:none; }
 body.bounce-view #button-container { display:block; position:fixed; inset:0; z-index:10; background:#151513; }
 .floating-button { position:fixed; width:110px; height:110px; border:1px solid rgba(255,255,255,.18); border-radius:22px; padding:10px; cursor:pointer; box-shadow:0 16px 40px rgba(0,0,0,.34); z-index:20; overflow:hidden; }
 .floating-button img { width:100%; height:100%; object-fit:contain; border-radius:14px; }
-.floating-button p { display:none; }
+.floating-button p { display:none; position:absolute; left:7px; right:7px; bottom:7px; margin:0; padding:6px 7px; border-radius:9px; color:#fff; background:rgba(10,10,9,.76); font-size:10px; font-weight:700; line-height:1.25; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; backdrop-filter:blur(6px); }
+body.show-bounce-labels .floating-button p { display:block; }
 .bounce-controls { display:none; }
 body.bounce-view .bounce-controls { display:flex; position:fixed; top:22px; right:22px; z-index:100; gap:8px; }
 .round-control { width:48px; height:48px; border-radius:50%; border:1px solid rgba(255,255,255,.16); color:#fff; background:rgba(20,20,18,.72); cursor:pointer; backdrop-filter:blur(12px); }
+.round-control.active { color:#11110f; background:var(--lime); }
 .round-control.primary { width:auto; padding:0 18px; border-radius:99px; background:var(--lime); color:#151513; font-weight:700; }
 
 .project-dialog { width:min(920px,calc(100% - 32px)); max-height:88vh; border:0; border-radius:8px; padding:0; color:#171715; background:#ece9df; box-shadow:0 30px 90px rgba(0,0,0,.55); }

@@ -109,6 +109,42 @@ html, body {
   height: 100%;
 }
 
+.site-header {
+  position: fixed;
+  top: 10px;
+  left: 16px;
+  z-index: 10000;
+}
+
+.legacy-link {
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(81, 81, 81, 0.39);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background .2s ease, transform .2s ease;
+}
+
+.legacy-link:hover,
+.legacy-link:focus-visible {
+  background: linear-gradient(135deg, #7c5cff, #4b3bdb);
+  transform: translateY(-1px);
+}
+
+.legacy-link:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
 
 .buttons-container {
   position: absolute;

@@ -9,7 +9,7 @@ var windowHeight = window.innerHeight;
 var animationFrameId = null;
 var animationPaused = false;
 
-var buttonContents = getSpreadSheetData();
+getProjectData();
 
 function createFloatingButton(content) {
   var button = document.createElement('button');
@@ -22,6 +22,9 @@ function createFloatingButton(content) {
   var text = document.createElement('p');
   text.textContent = content.text;
   button.appendChild(text);
+
+  // レイアウト寸法を取得できるよう、位置決めより先にDOMへ追加する。
+  buttonContainer.appendChild(button);
 
   // 背景色を指定（スプレッドシートの値をそのまま使う）
   if (content.backgroundColor) {
@@ -56,13 +59,14 @@ function createFloatingButton(content) {
   while (overlapping && attempt < maxAttempts) {
     overlapping = false;
 
-    var randomX = Math.floor(Math.random() * (windowWidth - 400 - buttonWidth));
-    var randomY = Math.floor(Math.random() * (windowHeight - 400 - buttonHeight));
+    var randomX = Math.floor(Math.random() * Math.max(1, windowWidth - buttonWidth));
+    var randomY = Math.floor(Math.random() * Math.max(1, windowHeight - buttonHeight));
 
     // 他のボタンとの重なりをチェック
     var buttons = document.getElementsByClassName('floating-button');
     for (var i = 0; i < buttons.length; i++) {
       var otherButton = buttons[i];
+      if (otherButton === button) continue;
       var otherButtonRect = otherButton.getBoundingClientRect();
 
       if (
@@ -90,7 +94,6 @@ function createFloatingButton(content) {
     window.open(content.url, '_blank');
   });
 
-  buttonContainer.appendChild(button);
 }
 
 
@@ -115,17 +118,19 @@ function animateButtons() {
 
     // 壁に当たったら速度を反転させる
     if (newX1 <= 0 || newX1 >= windowWidth - button1.offsetWidth) {
-      speedX1 = -speedX1; newX1 = Math.min(newX1, windowWidth - button1.offsetWidth);
+      speedX1 = -speedX1; newX1 = Math.max(0, Math.min(newX1, windowWidth - button1.offsetWidth));
     }
     if (newY1 <= 0 || newY1 >= windowHeight - button1.offsetHeight) {
       speedY1 = -speedY1;
-      newY1 = Math.min(newY1, windowHeight - button1.offsetHeight);
+      newY1 = Math.max(0, Math.min(newY1, windowHeight - button1.offsetHeight));
     }
 
     for (var j = 0; j < buttons.length; j++) {
       if (i !== j) {
         var button2 = buttons[j];
         if (checkCollision(button1, button2)) {
+          button2.speedX = button2.speedX || (Math.random() > 0.5 ? 1 : -1);
+          button2.speedY = button2.speedY || (Math.random() > 0.5 ? 1 : -1);
           var tempX = speedX1;
           var tempY = speedY1;
           speedX1 = button2.speedX;
@@ -206,20 +211,21 @@ function wait(ms) {
 
 
 // スプレッドシートからデータを取得する
-function getSpreadSheetData() {
+function getProjectData() {
   window.__moenaigomi_loading.inc(5)
   window.__moenaigomi_loading.log('作品データベースサーバーに接続しています...');
 
-  const url = "https://script.google.com/macros/s/AKfycbwJcyebutI6_tNCmV75O5FWMEqloMrPov62ShsT35D6CGOvacWuuwcAAW40pkxUGvBT/exec";
+  const url = "/api/items";
   fetch(url)
     .then((res) => {
+      if (!res.ok) throw new Error('作品データの取得に失敗しました。');
       return res.json();
     })
     .then((data) => {
       console.log("取得したデータ:");
       console.table(data);
 
-      if (data[0]["休止"]) {
+      if (data.some(function (item) { return item.paused; })) {
         //error.htmlへリダイレクト
         window.location.href = "/error.html";
         return;
@@ -230,23 +236,8 @@ function getSpreadSheetData() {
       window.__moenaigomi_loading.log('作品データベースサーバーからデータを取得しました。');
 
 
-      //かえってきたオブジェクトのキーを変更
-      const keys = Object.keys(data[0]);
       window.__moenaigomi_loading.log('作品データを解析しています...');
-      const newKeys = keys.map((key) => {
-        return key.replace("作品名", "text").replace("画像", "imageSrc").replace("背景色", "backgroundColor").replace("掲載先リンク", "url").replace("サイズ", "size");
-      });
-      //オブジェクトのキーを変更
-      const newData = data.map((d) => {
-        const newObject = {};
-        keys.forEach((key, index) => {
-          newObject[newKeys[index]] = d[key];
-        });
-        return newObject;
-      }
-      );
-      console.log("キー変更後のデータ:");
-      console.table(newData);
+      const newData = data;
 
 
 
@@ -270,10 +261,24 @@ function getSpreadSheetData() {
     .catch((error) => {
       console.error("システムメンテナンス中");
       console.error(error);
+      window.__moenaigomi_loading.log('作品データベースに接続できませんでした。');
+      window.__moenaigomi_loading.finish();
     })
     ;
 
 }
+
+window.addEventListener('resize', function () {
+  windowWidth = window.innerWidth;
+  windowHeight = window.innerHeight;
+  var buttons = document.getElementsByClassName('floating-button');
+  for (var i = 0; i < buttons.length; i++) {
+    var maxX = Math.max(0, windowWidth - buttons[i].offsetWidth);
+    var maxY = Math.max(0, windowHeight - buttons[i].offsetHeight);
+    buttons[i].style.left = Math.max(0, Math.min(parseFloat(buttons[i].style.left) || 0, maxX)) + 'px';
+    buttons[i].style.top = Math.max(0, Math.min(parseFloat(buttons[i].style.top) || 0, maxY)) + 'px';
+  }
+});
 
 const lis = document.querySelectorAll("li");
 const a = document.querySelectorAll("li a");

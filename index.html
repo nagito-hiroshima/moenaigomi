@@ -243,7 +243,7 @@
             </a>
             <div class="hero-copy">
                 <p class="eyebrow">SMALL IDEAS, BUILT FOR FUN</p>
-                <h1>つくったものを、<br><em>ひとつの棚に。</em></h1>
+                <h1><span>つくったものを、</span><em>ひとつの棚に。</em></h1>
                 <p class="lead">日々の小さな発見から生まれた、Webツールと遊びのコレクション。</p>
             </div>
             <div class="view-switcher" aria-label="表示方法">
@@ -256,7 +256,10 @@
         <section class="collection" aria-labelledby="collection-title">
             <div class="section-heading">
                 <div><p class="eyebrow">COLLECTION</p><h2 id="collection-title">作品一覧</h2></div>
-                <p id="item-count" class="item-count">読み込み中</p>
+                <div class="section-actions">
+                    <p id="item-count" class="item-count">読み込み中</p>
+                    <button type="button" class="collection-bounce-button view-button" data-view="bounce"><i class="fas fa-expand-arrows-alt"></i><span>跳ねる表示に切り替える</span></button>
+                </div>
             </div>
             <div id="button-container" class="project-grid" aria-live="polite"></div>
         </section>

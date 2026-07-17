@@ -29,8 +29,6 @@
 
 
     <link rel="stylesheet" type="text/css" href="./z-src/style.css">
-    <!-- スタイルシート1 -->
-    <link id="stylesheet" rel="stylesheet" href="./z-src/0.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <!-- ゲームっぽいローディング画面のスタイル -->
@@ -237,31 +235,51 @@
     <!-- roguelike-style 下部ログ表示 -->
     <div id="rogue-log" class="rogue-log" aria-live="polite" aria-atomic="false"></div>
 
-    <div class="buttons-container">
-        <ul>
-            <li class="active" onclick="csschange('0')"><a class="active-text"><i class="fas fa-burn"></i></a>
-            </li>
-            <li onclick="csschange('1')"><a><i class="fas fa-candy-cane"></i></a></li>
-            <li onclick="csschange('2')"><a><i class="fab fa-cc-visa"></i></a></li>
-            <li onclick="csschange('3')"><a><i class="	fab fa-connectdevelop"></i></a></li>
-        </ul>
-    </div>
+    <main class="site-shell">
+        <header class="hero">
+            <a class="brand" href="/" aria-label="燃えないゴミ箱 ホーム">
+                <span class="brand-mark"><i class="fas fa-burn" aria-hidden="true"></i></span>
+                <span>MOENAIGOMI</span>
+            </a>
+            <div class="hero-copy">
+                <p class="eyebrow">SMALL IDEAS, BUILT FOR FUN</p>
+                <h1>つくったものを、<br><em>ひとつの棚に。</em></h1>
+                <p class="lead">日々の小さな発見から生まれた、Webツールと遊びのコレクション。</p>
+            </div>
+            <div class="view-switcher" aria-label="表示方法">
+                <button type="button" class="view-button active" data-view="cards"><i class="fas fa-th-large"></i><span>カード</span></button>
+                <button type="button" class="view-button" data-view="bounce"><i class="fas fa-expand-arrows-alt"></i><span>跳ねる</span></button>
+            </div>
+            <p class="scroll-cue"><span></span>SCROLL TO EXPLORE</p>
+        </header>
 
+        <section class="collection" aria-labelledby="collection-title">
+            <div class="section-heading">
+                <div><p class="eyebrow">COLLECTION</p><h2 id="collection-title">作品一覧</h2></div>
+                <p id="item-count" class="item-count">読み込み中</p>
+            </div>
+            <div id="button-container" class="project-grid" aria-live="polite"></div>
+        </section>
+    </main>
 
-    <div id="button-container"></div>
+    <footer><a href="https://moenaigomi.com/" id="copyright"></a><span>MAKE SOMETHING, EVEN IF IT'S SMALL.</span></footer>
+    <script>document.getElementById('copyright').textContent = `©${new Date().getFullYear()} moenaigomi.com`;</script>
 
-    <a class="copyright" href="https://moenaigomi.com/" target="_blank" id="copyright"></a>
-    <script>
-        const year = new Date().getFullYear();
-        document.getElementById("copyright").innerHTML = "&#169;" + year + " moenaigomi.com";
-    </script>
+    <button type="button" id="ui-toggle" class="ui-toggle" aria-label="跳ねる表示に切り替える">
+        <span class="ui-toggle-icon" aria-hidden="true"><i class="fas fa-expand-arrows-alt"></i></span>
+        <span class="ui-toggle-copy"><small>VIEW MODE</small><strong>跳ねる表示へ</strong></span>
+    </button>
+
+    <dialog id="project-dialog" class="project-dialog">
+        <button type="button" class="dialog-close" aria-label="閉じる">&times;</button>
+        <div id="dialog-content"></div>
+    </dialog>
 
     <!-- 説明ウインドウ -->
     <div id="explain-popup" class="explain-popup" role="dialog" aria-live="polite" aria-hidden="true">
         <button class="close-btn" aria-label="閉じる" id="explain-close">&times;</button>
         <p>このサイトは今までに作成したプログラムの詰め合わせです。</p>
-        <p>[スペースキー]で動きを停止/再開できます。</p>
-        <p>[C]キーでコンテンツタイトルを表示できます。</p>
+        <p>カード表示と、作品が画面を跳ね回る表示を切り替えられます。</p>
     </div>
 
 

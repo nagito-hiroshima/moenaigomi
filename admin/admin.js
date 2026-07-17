@@ -77,6 +77,7 @@ function renderItems() {
       <div>
         <h3>${item.text}${item.paused ? '（休止）' : ''}</h3>
         <p>${item.url}</p>
+        <p>${item.description || '説明文なし'}</p>
         <p>背景色: ${item.backgroundColor || '-'} / サイズ: ${item.size || '1'} / 表示順: ${item.sortOrder || 0}</p>
       </div>
       <div class="card-actions">
@@ -100,6 +101,9 @@ $('item-form').addEventListener('submit', async (event) => {
   const payload = {
     text: $('text').value,
     imageSrc: $('imageSrc').value,
+    description: $('description').value,
+    additionalImages: $('additionalImages').value,
+    additionalInfo: $('additionalInfo').value,
     url: $('url').value,
     backgroundColor: $('backgroundColor').value,
     size: $('size').value,
@@ -125,6 +129,9 @@ $('items').addEventListener('click', async (event) => {
     $('item-id').value = item.id;
     $('text').value = item.text;
     $('imageSrc').value = item.imageSrc;
+    $('description').value = item.description || '';
+    $('additionalImages').value = item.additionalImages || '';
+    $('additionalInfo').value = item.additionalInfo || '';
     $('url').value = item.url;
     $('backgroundColor').value = item.backgroundColor || '';
     $('size').value = item.size || '1';

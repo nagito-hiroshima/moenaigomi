@@ -7,6 +7,8 @@ let items = [];
 let animationFrameId = null;
 let animationPaused = false;
 let bounceLabelsVisible = false;
+let activeProjectIndex = 0;
+let swipeStart = null;
 
 window.__moenaigomi_loading.inc(5);
 window.__moenaigomi_loading.log('作品データベースに接続しています…');
@@ -40,6 +42,7 @@ function renderCards() {
 }
 
 function openProject(item, index) {
+  activeProjectIndex = index;
   const images = [item.imageSrc, ...additionalImages(item)].slice(0, 5);
   dialogContent.innerHTML = `<div class="dialog-layout">
     <div class="dialog-gallery" style="--card-color:${escapeAttribute(item.backgroundColor || '#cbc8bf')}">
@@ -51,7 +54,14 @@ function openProject(item, index) {
       ${item.additionalInfo ? `<div class="additional-info">${escapeHtml(item.additionalInfo)}</div>` : ''}
       <a class="visit-link" href="${escapeAttribute(item.url)}" target="_blank" rel="noopener">作品をひらく <span>↗</span></a>
     </div></div>`;
-  dialog.showModal();
+  dialog.scrollTop = 0;
+  if (!dialog.open) dialog.showModal();
+}
+
+function navigateProject(direction) {
+  if (items.length < 2) return;
+  const nextIndex = (activeProjectIndex + direction + items.length) % items.length;
+  openProject(items[nextIndex], nextIndex);
 }
 
 function renderBouncing() {
@@ -144,6 +154,21 @@ viewButtons.forEach((button) => button.addEventListener('click', () => setView(b
 uiToggle.addEventListener('click', () => setView(document.body.classList.contains('bounce-view') ? 'cards' : 'bounce'));
 dialog.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
 dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+dialogContent.addEventListener('touchstart', (event) => {
+  if (event.touches.length !== 1) return;
+  const touch = event.touches[0];
+  swipeStart = { x: touch.clientX, y: touch.clientY };
+}, { passive: true });
+dialogContent.addEventListener('touchend', (event) => {
+  if (!swipeStart || event.changedTouches.length !== 1) return;
+  const touch = event.changedTouches[0];
+  const distanceX = touch.clientX - swipeStart.x;
+  const distanceY = touch.clientY - swipeStart.y;
+  swipeStart = null;
+  if (Math.abs(distanceX) < 50 || Math.abs(distanceX) <= Math.abs(distanceY)) return;
+  navigateProject(distanceX < 0 ? 1 : -1);
+}, { passive: true });
+dialogContent.addEventListener('touchcancel', () => { swipeStart = null; }, { passive: true });
 document.addEventListener('keydown', (event) => {
   if (!document.body.classList.contains('bounce-view')) return;
   if (event.code === 'Space') { event.preventDefault(); animationFrameId ? stopAnimation() : startAnimation(); }

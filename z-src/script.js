@@ -48,12 +48,17 @@ function openProject(item, index) {
     <div class="dialog-gallery" style="--card-color:${escapeAttribute(item.backgroundColor || '#cbc8bf')}">
       ${images.map((src) => `<img src="${escapeAttribute(src)}" alt="${escapeAttribute(item.text)} の画面">`).join('')}
     </div>
-    <div class="dialog-copy"><p class="eyebrow">PROJECT ${String(index + 1).padStart(2, '0')}</p>
+    <div class="dialog-copy"><p class="eyebrow">PROJECT ${String(index + 1).padStart(2, '0')} / ${String(items.length).padStart(2, '0')}</p>
       <h2>${escapeHtml(item.text)}</h2>
       <p class="dialog-description">${escapeHtml(item.description || '小さなアイデアから生まれたWeb作品です。')}</p>
       ${item.additionalInfo ? `<div class="additional-info">${escapeHtml(item.additionalInfo)}</div>` : ''}
       <a class="visit-link" href="${escapeAttribute(item.url)}" target="_blank" rel="noopener">作品をひらく <span>↗</span></a>
-    </div></div>`;
+    </div></div>
+    <div class="dialog-swipe-hint" aria-hidden="true"><span>←</span><strong>スワイプで移動</strong><span>→</span></div>
+    <div class="dialog-nav" aria-label="作品移動">
+      <button type="button" class="dialog-nav-button previous" data-dialog-nav="previous" aria-label="前の作品へ">←</button>
+      <button type="button" class="dialog-nav-button next" data-dialog-nav="next" aria-label="次の作品へ">→</button>
+    </div>`;
   dialog.scrollTop = 0;
   if (!dialog.open) dialog.showModal();
 }
@@ -154,6 +159,11 @@ viewButtons.forEach((button) => button.addEventListener('click', () => setView(b
 uiToggle.addEventListener('click', () => setView(document.body.classList.contains('bounce-view') ? 'cards' : 'bounce'));
 dialog.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
 dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+dialogContent.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-dialog-nav]');
+  if (!button) return;
+  navigateProject(button.dataset.dialogNav === 'next' ? 1 : -1);
+});
 dialogContent.addEventListener('touchstart', (event) => {
   if (event.touches.length !== 1) return;
   const touch = event.touches[0];

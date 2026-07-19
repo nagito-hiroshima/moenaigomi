@@ -87,8 +87,9 @@ body.bounce-view .bounce-controls { display:flex; position:fixed; top:22px; righ
 .round-control.active { color:#11110f; background:var(--lime); }
 .round-control.primary { width:auto; padding:0 18px; border-radius:99px; background:var(--lime); color:#151513; font-weight:700; }
 
-.project-dialog { width:min(920px,calc(100% - 32px)); max-height:88vh; border:0; border-radius:8px; padding:0; color:#171715; background:#ece9df; box-shadow:0 30px 90px rgba(0,0,0,.55); }
+.project-dialog { position:relative; width:min(920px,calc(100% - 32px)); max-height:88vh; border:0; border-radius:8px; padding:0; color:#171715; background:#ece9df; box-shadow:0 30px 90px rgba(0,0,0,.55); }
 .project-dialog::backdrop { background:rgba(8,8,7,.8); backdrop-filter:blur(6px); }
+
 #dialog-content { position:relative; touch-action:pan-y; }
 .dialog-close { position:absolute; right:16px; top:16px; z-index:3; width:44px; height:44px; border-radius:50%; border:0; background:#171715; color:#fff; font-size:25px; cursor:pointer; }
 .dialog-layout { display:grid; grid-template-columns:1.08fr 1fr; min-height:520px; }
@@ -146,6 +147,4 @@ footer a { color:#aaa99f; text-decoration:none; }
   footer { gap:18px; flex-direction:column; }
   .ui-toggle { right:14px; bottom:14px; min-width:0; padding-right:12px; }
   .dialog-swipe-hint { bottom:22px; }
-  .explain-popup { display:none; }
-}
 @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; animation:none !important; transition:none !important; } }

@@ -138,6 +138,6 @@ footer a { color:#aaa99f; text-decoration:none; }
   .collection-bounce-button span { display:none; }
   footer { gap:18px; flex-direction:column; }
   .ui-toggle { right:14px; bottom:14px; min-width:0; padding-right:12px; }
-  .explain-popup { left:14px; bottom:78px; width:calc(100% - 28px); }
+  .explain-popup { display:none; }
 }
 @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; animation:none !important; transition:none !important; } }

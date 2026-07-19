@@ -7,6 +7,8 @@ let items = [];
 let animationFrameId = null;
 let animationPaused = false;
 let bounceLabelsVisible = false;
+let activeProjectIndex = 0;
+let swipeStart = null;
 
 window.__moenaigomi_loading.inc(5);
 window.__moenaigomi_loading.log('作品データベースに接続しています…');
@@ -40,18 +42,31 @@ function renderCards() {
 }
 
 function openProject(item, index) {
+  activeProjectIndex = index;
   const images = [item.imageSrc, ...additionalImages(item)].slice(0, 5);
   dialogContent.innerHTML = `<div class="dialog-layout">
     <div class="dialog-gallery" style="--card-color:${escapeAttribute(item.backgroundColor || '#cbc8bf')}">
       ${images.map((src) => `<img src="${escapeAttribute(src)}" alt="${escapeAttribute(item.text)} の画面">`).join('')}
     </div>
-    <div class="dialog-copy"><p class="eyebrow">PROJECT ${String(index + 1).padStart(2, '0')}</p>
+    <div class="dialog-copy"><p class="eyebrow">PROJECT ${String(index + 1).padStart(2, '0')} / ${String(items.length).padStart(2, '0')}</p>
       <h2>${escapeHtml(item.text)}</h2>
       <p class="dialog-description">${escapeHtml(item.description || '小さなアイデアから生まれたWeb作品です。')}</p>
       ${item.additionalInfo ? `<div class="additional-info">${escapeHtml(item.additionalInfo)}</div>` : ''}
       <a class="visit-link" href="${escapeAttribute(item.url)}" target="_blank" rel="noopener">作品をひらく <span>↗</span></a>
-    </div></div>`;
-  dialog.showModal();
+    </div></div>
+    <div class="dialog-swipe-hint" aria-hidden="true"><span>←</span><strong>スワイプで移動</strong><span>→</span></div>
+    <div class="dialog-nav" aria-label="作品移動">
+      <button type="button" class="dialog-nav-button previous" data-dialog-nav="previous" aria-label="前の作品へ">←</button>
+      <button type="button" class="dialog-nav-button next" data-dialog-nav="next" aria-label="次の作品へ">→</button>
+    </div>`;
+  dialog.scrollTop = 0;
+  if (!dialog.open) dialog.showModal();
+}
+
+function navigateProject(direction) {
+  if (items.length < 2) return;
+  const nextIndex = (activeProjectIndex + direction + items.length) % items.length;
+  openProject(items[nextIndex], nextIndex);
 }
 
 function renderBouncing() {
@@ -144,6 +159,26 @@ viewButtons.forEach((button) => button.addEventListener('click', () => setView(b
 uiToggle.addEventListener('click', () => setView(document.body.classList.contains('bounce-view') ? 'cards' : 'bounce'));
 dialog.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
 dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+dialogContent.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-dialog-nav]');
+  if (!button) return;
+  navigateProject(button.dataset.dialogNav === 'next' ? 1 : -1);
+});
+dialogContent.addEventListener('touchstart', (event) => {
+  if (event.touches.length !== 1) return;
+  const touch = event.touches[0];
+  swipeStart = { x: touch.clientX, y: touch.clientY };
+}, { passive: true });
+dialogContent.addEventListener('touchend', (event) => {
+  if (!swipeStart || event.changedTouches.length !== 1) return;
+  const touch = event.changedTouches[0];
+  const distanceX = touch.clientX - swipeStart.x;
+  const distanceY = touch.clientY - swipeStart.y;
+  swipeStart = null;
+  if (Math.abs(distanceX) < 50 || Math.abs(distanceX) <= Math.abs(distanceY)) return;
+  navigateProject(distanceX < 0 ? 1 : -1);
+}, { passive: true });
+dialogContent.addEventListener('touchcancel', () => { swipeStart = null; }, { passive: true });
 document.addEventListener('keydown', (event) => {
   if (!document.body.classList.contains('bounce-view')) return;
   if (event.code === 'Space') { event.preventDefault(); animationFrameId ? stopAnimation() : startAnimation(); }

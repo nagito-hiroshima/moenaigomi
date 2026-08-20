@@ -180,6 +180,11 @@ dialogContent.addEventListener('touchend', (event) => {
 }, { passive: true });
 dialogContent.addEventListener('touchcancel', () => { swipeStart = null; }, { passive: true });
 document.addEventListener('keydown', (event) => {
+  if (dialog.open && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+    event.preventDefault();
+    navigateProject(event.key === 'ArrowRight' ? 1 : -1);
+    return;
+  }
   if (!document.body.classList.contains('bounce-view')) return;
   if (event.code === 'Space') { event.preventDefault(); animationFrameId ? stopAnimation() : startAnimation(); }
   if (event.code === 'KeyC' && !event.repeat) toggleBounceLabels();
